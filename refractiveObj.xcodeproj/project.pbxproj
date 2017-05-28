@@ -14,6 +14,7 @@
 		045C3E381ED9990B00870FC4 /* libGLEW.2.0.0.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 045C3E371ED9990B00870FC4 /* libGLEW.2.0.0.dylib */; };
 		045C3E3A1ED9991B00870FC4 /* libglfw.3.2.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 045C3E391ED9991B00870FC4 /* libglfw.3.2.dylib */; };
 		045C3E3D1ED99D4400870FC4 /* glslprogram.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 045C3E3B1ED99D4400870FC4 /* glslprogram.cpp */; };
+		045C3E411EDA789C00870FC4 /* controller.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 045C3E3F1EDA789C00870FC4 /* controller.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -42,6 +43,8 @@
 		045C3E3B1ED99D4400870FC4 /* glslprogram.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = glslprogram.cpp; sourceTree = "<group>"; };
 		045C3E3C1ED99D4400870FC4 /* glslprogram.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = glslprogram.hpp; sourceTree = "<group>"; };
 		045C3E3E1ED9B07C00870FC4 /* shader */ = {isa = PBXFileReference; lastKnownFileType = folder; path = shader; sourceTree = "<group>"; };
+		045C3E3F1EDA789C00870FC4 /* controller.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = controller.cpp; sourceTree = "<group>"; };
+		045C3E401EDA789C00870FC4 /* controller.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = controller.hpp; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -87,6 +90,8 @@
 				045C3E321ED9961D00870FC4 /* model.hpp */,
 				045C3E3B1ED99D4400870FC4 /* glslprogram.cpp */,
 				045C3E3C1ED99D4400870FC4 /* glslprogram.hpp */,
+				045C3E3F1EDA789C00870FC4 /* controller.cpp */,
+				045C3E401EDA789C00870FC4 /* controller.hpp */,
 			);
 			path = refractiveObj;
 			sourceTree = "<group>";
@@ -160,6 +165,7 @@
 			files = (
 				041A0D5F1ED9915A002B4B84 /* main.cpp in Sources */,
 				045C3E301ED9941D00870FC4 /* render.cpp in Sources */,
+				045C3E411EDA789C00870FC4 /* controller.cpp in Sources */,
 				045C3E3D1ED99D4400870FC4 /* glslprogram.cpp in Sources */,
 				045C3E331ED9961D00870FC4 /* model.cpp in Sources */,
 			);

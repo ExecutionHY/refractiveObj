@@ -14,14 +14,17 @@
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
 using namespace glm;
+#include <glm/gtc/matrix_transform.hpp>
 
 #include "glslprogram.hpp"
 #include "model.hpp"
+#include "controller.hpp"
 
 class Render {
 private:
     GLFWwindow *window;
     GLSLProgram program;
+    Controller controller;
     GLuint VertexArrayID;
     GLuint vertexbuffer;
     Model m_object;

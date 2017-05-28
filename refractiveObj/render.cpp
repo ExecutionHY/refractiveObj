@@ -24,7 +24,7 @@ Render::Render() {
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
     
     // Open a window and create its OpenGL context
-    window = glfwCreateWindow( 1024, 768, "refractiveObj", NULL, NULL);
+    window = glfwCreateWindow( 800, 600, "refractiveObj", NULL, NULL);
     if( window == NULL ){
         fprintf( stderr, "Failed to open GLFW window. If you have an Intel GPU, they are not 3.3 compatible. Try the 2.1 version of the tutorials.\n" );
         getchar();
@@ -40,6 +40,17 @@ Render::Render() {
         glfwTerminate();
         exit(-1);
     }
+    
+    
+    // Ensure we can capture the escape key being pressed below
+    glfwSetInputMode(window, GLFW_STICKY_KEYS, GL_TRUE);
+    // Dark blue background
+    glClearColor(0.0f, 0.0f, 0.4f, 0.0f);
+    
+    // Enable depth test
+    glEnable(GL_DEPTH_TEST);
+    // Accept fragment if it closer to the camera than the former one
+    glDepthFunc(GL_LESS);
 }
 Render::~Render() {
     
@@ -68,27 +79,29 @@ void Render::loadModel() {
 
 int Render::run() {
     
-    
-    // Ensure we can capture the escape key being pressed below
-    glfwSetInputMode(window, GLFW_STICKY_KEYS, GL_TRUE);
-    
-    // Dark blue background
-    glClearColor(0.0f, 0.0f, 0.4f, 0.0f);
-    
-    if (program.initShader( "SimpleVertexShader.vertexshader", "SimpleFragmentShader.fragmentshader" ) == false) {
+    if (program.initShader( "vertex.glsl", "fragment.glsl" ) == false) {
         getchar();
         glfwTerminate();
         exit(-1);
     }
     
+    controller.init(window);
+    // Get a handle for our "MVP" uniform
+    controller.MatrixID = glGetUniformLocation(program.programID, "MVP");
+    
     loadModel();
- 
+    
     do{
-        // Clear the screen. It's not mentioned before Tutorial 02, but it can cause flickering, so it's there nonetheless.
-        glClear( GL_COLOR_BUFFER_BIT );
+        // Clear the screen
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         
         // Use our shader
         glUseProgram(program.programID);
+        
+        
+        controller.update();
+        // send data to shader
+        glUniformMatrix4fv(controller.MatrixID, 1, GL_FALSE, &controller.MVP[0][0]);
         
         // 1rst attribute buffer : vertices
         glEnableVertexAttribArray(0);

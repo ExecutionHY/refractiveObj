@@ -18,5 +18,17 @@ void Model::init() {
     vertices.push_back(vec3(-1.0f, -1.0f, 0.0f));
     vertices.push_back(vec3( 1.0f, -1.0f, 0.0f));
     vertices.push_back(vec3( 0.0f,  1.0f, 0.0f));
-    vertex_count = 3;
+    
+    vertices.push_back(vec3(-1.0f, -1.0f, 0.0f));
+    vertices.push_back(vec3( 1.0f, -1.0f, 0.0f));
+    vertices.push_back(vec3( 0.0f,  0.0f,-1.0f));
+    
+    vertices.push_back(vec3(-1.0f, -1.0f, 0.0f));
+    vertices.push_back(vec3( 0.0f,  0.0f,-1.0f));
+    vertices.push_back(vec3( 0.0f,  1.0f, 0.0f));
+    
+    vertices.push_back(vec3( 0.0f,  0.0f,-1.0f));
+    vertices.push_back(vec3( 1.0f, -1.0f, 0.0f));
+    vertices.push_back(vec3( 0.0f,  1.0f, 0.0f));
+    vertex_count = 12;
 }
