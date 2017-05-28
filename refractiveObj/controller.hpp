@@ -19,9 +19,6 @@ using namespace glm;
 class Controller {
 private:
     GLFWwindow *window;
-    mat4 Projection;
-    mat4 View;
-    mat4 Model;
     
     bool mousePressed;
     double lastXpos;
@@ -33,8 +30,14 @@ private:
     vec3 right;
     vec3 up;
 public:
-    GLuint MatrixID;
+    GLuint MVPMatrixID;
+    GLuint ModelMatrixID;
+    GLuint ViewMatrixID;
     mat4 MVP;
+    mat4 Projection;
+    mat4 View;
+    mat4 Model;
+    
     Controller();
     ~Controller();
     void init(GLFWwindow *window);

@@ -25,8 +25,14 @@ private:
     GLFWwindow *window;
     GLSLProgram program;
     Controller controller;
+    
     GLuint VertexArrayID;
     GLuint vertexbuffer;
+    GLuint uvbuffer;
+    GLuint normalbuffer;
+    GLuint elementbuffer;
+    GLuint Texture;
+
     Model m_object;
     Model m_background;
     void loadModel();

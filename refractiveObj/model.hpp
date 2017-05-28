@@ -11,6 +11,7 @@
 
 #include <stdio.h>
 #include <vector>
+#include <map>
 #include <cstdlib>
 using namespace std;
 
@@ -18,14 +19,44 @@ using namespace std;
 #include <glm/glm.hpp>
 using namespace glm;
 
+struct PackedVertex{
+    glm::vec3 position;
+    glm::vec2 uv;
+    glm::vec3 normal;
+    bool operator<(const PackedVertex that) const{
+        return memcmp((void*)this, (void*)&that, sizeof(PackedVertex))>0;
+    };
+};
+
 class Model {
 private:
-    int vertex_count;
+    bool loadOBJ(const char * path,
+                 std::vector<glm::vec3> & out_vertices,
+                 std::vector<glm::vec2> & out_uvs,
+                 std::vector<glm::vec3> & out_normals
+                 );
+    bool getSimilarVertexIndex_fast(
+                                           PackedVertex & packed,
+                                           std::map<PackedVertex,unsigned short> & VertexToOutIndex,
+                                           unsigned short & result
+                                    );
+    void indexVBO(
+                         std::vector<glm::vec3> & in_vertices,
+                         std::vector<glm::vec2> & in_uvs,
+                         std::vector<glm::vec3> & in_normals,
+                         
+                         std::vector<unsigned short> & out_indices,
+                         std::vector<glm::vec3> & out_vertices,
+                         std::vector<glm::vec2> & out_uvs,
+                         std::vector<glm::vec3> & out_normals
+                  );
 public:
     Model();
     ~Model();
-    vector<vec3> vertices;
-    int vertexCount() {return vertex_count;};
+    vector<unsigned short> indices;
+    vector<vec3> indexed_vertices;
+    vector<vec2> indexed_uvs;
+    vector<vec3> indexed_normals;
     void init();
 };
 
