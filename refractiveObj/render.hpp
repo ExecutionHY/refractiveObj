@@ -19,6 +19,7 @@ using namespace glm;
 #include "glslprogram.hpp"
 #include "model.hpp"
 #include "controller.hpp"
+#include "texture.hpp"
 
 class Render {
 private:
@@ -27,15 +28,22 @@ private:
     Controller controller;
     
     GLuint VertexArrayID;
-    GLuint vertexbuffer;
-    GLuint uvbuffer;
-    GLuint normalbuffer;
-    GLuint elementbuffer;
-    GLuint Texture;
+    GLuint vertexbuffer_object;
+    GLuint uvbuffer_object;
+    GLuint normalbuffer_object;
+    GLuint elementbuffer_object;
+    
+    GLuint vertexbuffer_background;
+    GLuint uvbuffer_background;
+    GLuint normalbuffer_background;
+    GLuint elementbuffer_background;
 
     Model m_object;
     Model m_background;
     void loadModel();
+
+    Texture bgTexture;
+
 public:
     Render();
     ~Render();

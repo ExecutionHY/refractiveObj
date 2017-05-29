@@ -29,6 +29,8 @@ private:
     vec3 direction;
     vec3 right;
     vec3 up;
+    
+    float dist;
 public:
     GLuint MVPMatrixID;
     GLuint ModelMatrixID;

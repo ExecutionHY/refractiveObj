@@ -55,13 +55,20 @@ Render::Render() {
 Render::~Render() {
     
     // Cleanup VBO
-    glDeleteBuffers(1, &vertexbuffer);
-    glDeleteBuffers(1, &uvbuffer);
-    glDeleteBuffers(1, &normalbuffer);
-    glDeleteBuffers(1, &elementbuffer);
+    glDeleteBuffers(1, &vertexbuffer_object);
+    glDeleteBuffers(1, &uvbuffer_object);
+    glDeleteBuffers(1, &normalbuffer_object);
+    glDeleteBuffers(1, &elementbuffer_object);
+    
+    glDeleteBuffers(1, &vertexbuffer_background);
+    glDeleteBuffers(1, &uvbuffer_background);
+    glDeleteBuffers(1, &normalbuffer_background);
+    glDeleteBuffers(1, &elementbuffer_background);
+    
+    
     glDeleteVertexArrays(1, &VertexArrayID);
     glDeleteProgram(program.programID);
-    //glDeleteTextures(1, &Texture);
+    glDeleteTextures(1, &bgTexture.texture);
 
     
     // Close OpenGL window and terminate GLFW
@@ -69,30 +76,51 @@ Render::~Render() {
     
 }
 void Render::loadModel() {
-    // load object
-    m_object.init();
-    
     // generate VAO
     glGenVertexArrays(1, &VertexArrayID);
     glBindVertexArray(VertexArrayID);
     
+    // load object
+    m_object.init("suzanne.obj");
+    
     // generate VBO
-    glGenBuffers(1, &vertexbuffer);
-    glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer);
+    glGenBuffers(1, &vertexbuffer_object);
+    glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer_object);
     glBufferData(GL_ARRAY_BUFFER, m_object.indexed_vertices.size() * sizeof(vec3), &m_object.indexed_vertices[0], GL_STATIC_DRAW);
     
-    glGenBuffers(1, &uvbuffer);
-    glBindBuffer(GL_ARRAY_BUFFER, uvbuffer);
+    glGenBuffers(1, &uvbuffer_object);
+    glBindBuffer(GL_ARRAY_BUFFER, uvbuffer_object);
     glBufferData(GL_ARRAY_BUFFER, m_object.indexed_uvs.size() * sizeof(vec2), &m_object.indexed_uvs[0], GL_STATIC_DRAW);
     
-    glGenBuffers(1, &normalbuffer);
-    glBindBuffer(GL_ARRAY_BUFFER, normalbuffer);
+    glGenBuffers(1, &normalbuffer_object);
+    glBindBuffer(GL_ARRAY_BUFFER, normalbuffer_object);
     glBufferData(GL_ARRAY_BUFFER, m_object.indexed_normals.size() * sizeof(vec3), &m_object.indexed_normals[0], GL_STATIC_DRAW);
     
     // Generate a buffer for the indices as well
-    glGenBuffers(1, &elementbuffer);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, elementbuffer);
+    glGenBuffers(1, &elementbuffer_object);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, elementbuffer_object);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, m_object.indices.size() * sizeof(unsigned short), &m_object.indices[0] , GL_STATIC_DRAW);
+    
+    // load background
+    m_background.init("background.obj");
+    
+    // generate VBO
+    glGenBuffers(1, &vertexbuffer_background);
+    glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer_background);
+    glBufferData(GL_ARRAY_BUFFER, m_object.indexed_vertices.size() * sizeof(vec3), &m_background.indexed_vertices[0], GL_STATIC_DRAW);
+    
+    glGenBuffers(1, &uvbuffer_background);
+    glBindBuffer(GL_ARRAY_BUFFER, uvbuffer_background);
+    glBufferData(GL_ARRAY_BUFFER, m_object.indexed_uvs.size() * sizeof(vec2), &m_background.indexed_uvs[0], GL_STATIC_DRAW);
+    
+    glGenBuffers(1, &normalbuffer_background);
+    glBindBuffer(GL_ARRAY_BUFFER, normalbuffer_background);
+    glBufferData(GL_ARRAY_BUFFER, m_object.indexed_normals.size() * sizeof(vec3), &m_background.indexed_normals[0], GL_STATIC_DRAW);
+    
+    // Generate a buffer for the indices as well
+    glGenBuffers(1, &elementbuffer_background);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, elementbuffer_background);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, m_object.indices.size() * sizeof(unsigned short), &m_background.indices[0] , GL_STATIC_DRAW);
 
 }
 
@@ -110,13 +138,13 @@ int Render::run() {
     controller.ViewMatrixID = glGetUniformLocation(program.programID, "V");
     controller.ModelMatrixID = glGetUniformLocation(program.programID, "M");
     
-    /*
+    
     // Load the texture
-    Texture = loadDDS("uvmap.DDS");
+    bgTexture.loadBMP("/Users/mac/Codes/refractiveObj/background.bmp");
     
     // Get a handle for our "myTextureSampler" uniform
-    GLuint TextureID  = glGetUniformLocation(programID, "myTextureSampler");
-    */
+    bgTexture.textureID  = glGetUniformLocation(program.programID, "myTextureSampler");
+    
     
     // Get a handle for our "LightPosition" uniform
     GLuint LightID = glGetUniformLocation(program.programID, "LightPosition_worldspace");
@@ -141,57 +169,48 @@ int Render::run() {
         glm::vec3 lightPos = glm::vec3(4,4,4);
         glUniform3f(LightID, lightPos.x, lightPos.y, lightPos.z);
 
+        // Draw m_object
         
-        // 1rst attribute buffer : vertices
+        // attribute buffer
         glEnableVertexAttribArray(0);
-        glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer);
-        glVertexAttribPointer(
-                              0,                  // attribute
-                              3,                  // size
-                              GL_FLOAT,           // type
-                              GL_FALSE,           // normalized?
-                              0,                  // stride
-                              (void*)0            // array buffer offset
-                              );
-        
-        // 2nd attribute buffer : UVs
+        glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer_object);
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
         glEnableVertexAttribArray(1);
-        glBindBuffer(GL_ARRAY_BUFFER, uvbuffer);
-        glVertexAttribPointer(
-                              1,                                // attribute
-                              2,                                // size
-                              GL_FLOAT,                         // type
-                              GL_FALSE,                         // normalized?
-                              0,                                // stride
-                              (void*)0                          // array buffer offset
-                              );
-        
-        // 3rd attribute buffer : normals
+        glBindBuffer(GL_ARRAY_BUFFER, uvbuffer_object);
+        glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, (void*)0);
         glEnableVertexAttribArray(2);
-        glBindBuffer(GL_ARRAY_BUFFER, normalbuffer);
-        glVertexAttribPointer(
-                              2,                                // attribute
-                              3,                                // size
-                              GL_FLOAT,                         // type
-                              GL_FALSE,                         // normalized?
-                              0,                                // stride
-                              (void*)0                          // array buffer offset
-                              );
-        
+        glBindBuffer(GL_ARRAY_BUFFER, normalbuffer_object);
+        glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
         // Index buffer
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, elementbuffer);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, elementbuffer_object);
         
-        // Draw the triangles !
-        glDrawElements(
-                       GL_TRIANGLES,      // mode
-                       m_object.indices.size(),    // count
-                       GL_UNSIGNED_SHORT,   // type
-                       (void*)0           // element array buffer offset
-                       );
+        glDrawElements(GL_TRIANGLES, m_object.indices.size(), GL_UNSIGNED_SHORT, (void*)0);
         
         glDisableVertexAttribArray(0);
         glDisableVertexAttribArray(1);
         glDisableVertexAttribArray(2);
+        
+        // Draw m_background
+        
+        // attribute buffer
+        glEnableVertexAttribArray(0);
+        glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer_background);
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
+        glEnableVertexAttribArray(1);
+        glBindBuffer(GL_ARRAY_BUFFER, uvbuffer_background);
+        glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, (void*)0);
+        glEnableVertexAttribArray(2);
+        glBindBuffer(GL_ARRAY_BUFFER, normalbuffer_background);
+        glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
+        // Index buffer
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, elementbuffer_background);
+        
+        glDrawElements(GL_TRIANGLES, m_background.indices.size(), GL_UNSIGNED_SHORT, (void*)0);
+        
+        glDisableVertexAttribArray(0);
+        glDisableVertexAttribArray(1);
+        glDisableVertexAttribArray(2);
+        
         
         // Swap buffers
         glfwSwapBuffers(window);

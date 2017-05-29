@@ -11,6 +11,10 @@
 Model::Model() {
 }
 Model::~Model() {
+    indices.clear();
+    indexed_vertices.clear();
+    indexed_uvs.clear();
+    indexed_normals.clear();
 }
 bool Model::loadOBJ(const char * path,
                     std::vector<glm::vec3> & out_vertices,
@@ -153,14 +157,14 @@ void Model::indexVBO(
 }
 
 
-void Model::init() {
-    const char *path = "/Users/mac/Codes/refractiveObj/suzanne.obj";
+void Model::init(const char *path) {
+    string file = string("/Users/mac/Codes/refractiveObj/") + string(path);
     
     std::vector<glm::vec3> vertices;
     std::vector<glm::vec2> uvs;
     std::vector<glm::vec3> normals;
     
-    if (loadOBJ(path, vertices, uvs, normals) == false) exit(-1);
+    if (loadOBJ(file.c_str(), vertices, uvs, normals) == false) exit(-1);
     
     indexVBO(vertices, uvs, normals, indices, indexed_vertices, indexed_uvs, indexed_normals);
     

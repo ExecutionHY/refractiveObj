@@ -13,6 +13,7 @@
 #include <vector>
 #include <map>
 #include <cstdlib>
+#include <string>
 using namespace std;
 
 #include <GL/glew.h>
@@ -57,7 +58,7 @@ public:
     vector<vec3> indexed_vertices;
     vector<vec2> indexed_uvs;
     vector<vec3> indexed_normals;
-    void init();
+    void init(const char *path);
 };
 
 #endif /* model_hpp */

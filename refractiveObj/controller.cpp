@@ -13,14 +13,7 @@ Controller::Controller() {
 
 Controller::~Controller() {
 }
-/*
-void Controller::mouse_button_callback(GLFWwindow* window, int button, int action, int mods) {
-    if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS)
-        mousePressed = true;
-    if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_RELEASE)
-        mousePressed = false;
-}
- */
+
 void Controller::init(GLFWwindow *window) {
     this->window = window;
     
@@ -33,8 +26,9 @@ void Controller::init(GLFWwindow *window) {
     right = vec3(1,0,0);
     up = vec3(0,1,0);
     
+    dist = 5.0f;
     Projection = perspective(45.0f, 4.0f/3.0f, 0.1f, 100.0f);
-    View = lookAt(direction*(-4.0f), vec3(0,0,0), vec3(0,1,0));
+    View = lookAt(direction*(-1.0f)*dist, vec3(0,0,0), vec3(0,1,0));
     Model = mat4(1.0f);
     MVP = Projection * View * Model;
 }
@@ -62,7 +56,7 @@ void Controller::update() {
                          0,
                          cos(horizontalAngle - 3.14159f/2.0f));
             up = cross(right, direction);
-            View = lookAt(direction*(-4.0f), vec3(0,0,0), up);
+            View = lookAt(direction*(-1.0f)*dist, vec3(0,0,0), up);
             MVP = Projection * View * Model;
         }
     }
