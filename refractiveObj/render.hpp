@@ -24,7 +24,7 @@ using namespace glm;
 class Render {
 private:
     GLFWwindow *window;
-    GLSLProgram program;
+    GLSLProgram program_std;
     Controller controller;
     
     GLuint VertexArrayID;

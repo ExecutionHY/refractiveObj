@@ -67,7 +67,7 @@ Render::~Render() {
     
     
     glDeleteVertexArrays(1, &VertexArrayID);
-    glDeleteProgram(program.programID);
+    glDeleteProgram(program_std.programID);
     glDeleteTextures(1, &bgTexture.texture);
 
     
@@ -126,7 +126,7 @@ void Render::loadModel() {
 
 int Render::run() {
     
-    if (program.initShader( "vertex.glsl", "fragment.glsl" ) == false) {
+    if (program_std.initShader( "stdVertex.glsl", "stdFragment.glsl" ) == false) {
         getchar();
         glfwTerminate();
         exit(-1);
@@ -134,20 +134,18 @@ int Render::run() {
     
     controller.init(window);
     // Get a handle for our "MVP" uniform
-    controller.MVPMatrixID = glGetUniformLocation(program.programID, "MVP");
-    controller.ViewMatrixID = glGetUniformLocation(program.programID, "V");
-    controller.ModelMatrixID = glGetUniformLocation(program.programID, "M");
-    
+    controller.MVPMatrixID = glGetUniformLocation(program_std.programID, "MVP");
+    controller.ViewMatrixID = glGetUniformLocation(program_std.programID, "V");
+    controller.ModelMatrixID = glGetUniformLocation(program_std.programID, "M");
+    // Get a handle for our "LightPosition" uniform
+    controller.LightID = glGetUniformLocation(program_std.programID, "LightPosition_worldspace");
     
     // Load the texture
     bgTexture.loadBMP("/Users/mac/Codes/refractiveObj/background.bmp");
-    
     // Get a handle for our "myTextureSampler" uniform
-    bgTexture.textureID  = glGetUniformLocation(program.programID, "myTextureSampler");
+    bgTexture.textureID  = glGetUniformLocation(program_std.programID, "myTextureSampler");
     
     
-    // Get a handle for our "LightPosition" uniform
-    GLuint LightID = glGetUniformLocation(program.programID, "LightPosition_worldspace");
 
     loadModel();
     
@@ -156,20 +154,20 @@ int Render::run() {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         
         // Use our shader
-        glUseProgram(program.programID);
+        glUseProgram(program_std.programID);
         
         
         controller.update();
-        // send data to shader
-        glUniformMatrix4fv(controller.MVPMatrixID, 1, GL_FALSE, &controller.MVP[0][0]);
-        glUniformMatrix4fv(controller.ModelMatrixID, 1, GL_FALSE, &controller.Model[0][0]);
         glUniformMatrix4fv(controller.ViewMatrixID, 1, GL_FALSE, &controller.View[0][0]);
         
         
-        glm::vec3 lightPos = glm::vec3(4,4,4);
-        glUniform3f(LightID, lightPos.x, lightPos.y, lightPos.z);
+        glUniform3f(controller.LightID, controller.lightPos.x, controller.lightPos.y, controller.lightPos.z);
 
         // Draw m_object
+        
+        // send data to shader
+        glUniformMatrix4fv(controller.MVPMatrixID, 1, GL_FALSE, &controller.MVP_object[0][0]);
+        glUniformMatrix4fv(controller.ModelMatrixID, 1, GL_FALSE, &controller.Model_object[0][0]);
         
         // attribute buffer
         glEnableVertexAttribArray(0);
@@ -191,6 +189,8 @@ int Render::run() {
         glDisableVertexAttribArray(2);
         
         // Draw m_background
+        glUniformMatrix4fv(controller.MVPMatrixID, 1, GL_FALSE, &controller.MVP_background[0][0]);
+        glUniformMatrix4fv(controller.ModelMatrixID, 1, GL_FALSE, &controller.Model_background[0][0]);
         
         // attribute buffer
         glEnableVertexAttribArray(0);
