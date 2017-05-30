@@ -26,6 +26,7 @@ class Render {
 private:
     GLFWwindow *window;
     GLSLProgram program_std;
+    GLSLProgram program_obj;
     Controller controller;
     
     GLuint VertexArrayID;

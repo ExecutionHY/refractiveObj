@@ -40,7 +40,8 @@ void Controller::init(GLFWwindow *window) {
     Model_background = mat4(1.0f);
     MVP_background = Projection * View * Model_background;
     lightPos = vec3(4,4,4);
-
+    camera = direction*(-1.0f)*dist;
+    
     lastTime = glfwGetTime();
     frameCount = 0;
 }
@@ -84,8 +85,8 @@ void Controller::update() {
     if (glfwGetKey(window, GLFW_KEY_X) == GLFW_PRESS)
         dist *= 0.95;
     
-    
-    
+    camera = direction*(-1.0f)*dist;
+
     View = lookAt(direction*(-1.0f)*dist, vec3(0,0,0), up);
     MVP_object = Projection * View * Model_object;
     MVP_background = Projection * View * Model_background;

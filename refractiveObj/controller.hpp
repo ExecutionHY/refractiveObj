@@ -42,6 +42,7 @@ public:
     mat4 Model_background;
     mat4 MVP_background;
     
+    vec3 camera;
     vec3 lightPos;
     
     float fps;

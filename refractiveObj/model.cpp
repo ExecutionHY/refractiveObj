@@ -167,6 +167,4 @@ void Model::init(const char *path) {
     if (loadOBJ(file.c_str(), vertices, uvs, normals) == false) exit(-1);
     
     indexVBO(vertices, uvs, normals, indices, indexed_vertices, indexed_uvs, indexed_normals);
-    
-    
 }

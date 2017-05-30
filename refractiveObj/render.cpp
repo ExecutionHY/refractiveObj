@@ -28,7 +28,6 @@ Render::Render() {
     if( window == NULL ){
         fprintf( stderr, "Failed to open GLFW window. If you have an Intel GPU, they are not 3.3 compatible. Try the 2.1 version of the tutorials.\n" );
         getchar();
-        glfwTerminate();
         exit(-1);
     }
     glfwMakeContextCurrent(window);
@@ -37,7 +36,6 @@ Render::Render() {
     if (glewInit() != GLEW_OK) {
         fprintf(stderr, "Failed to initialize GLEW\n");
         getchar();
-        glfwTerminate();
         exit(-1);
     }
     
@@ -118,14 +116,14 @@ void Render::loadModel() {
     glGenBuffers(1, &elementbuffer_background);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, elementbuffer_background);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, m_object.indices.size() * sizeof(unsigned short), &m_background.indices[0] , GL_STATIC_DRAW);
-
+    
 }
 
 int Render::run() {
     
+    // program for background
     if (program_std.initShader( "stdVertex.glsl", "stdFragment.glsl" ) == false) {
         getchar();
-        glfwTerminate();
         exit(-1);
     }
     
@@ -136,9 +134,40 @@ int Render::run() {
     program_std.uniformID_Light = glGetUniformLocation(program_std.programID, "LightPosition_worldspace");
     program_std.uniformID_Texture  = glGetUniformLocation(program_std.programID, "myTextureSampler");
     
-    controller.init(window);
+    if (program_obj.initShader("objVertex.glsl", "objFragment.glsl") == false) {
+        getchar();
+        exit(-1);
+    }
+    program_obj.uniformID_MVP = glGetUniformLocation(program_obj.programID, "MVP");
+    program_obj.uniformID_View = glGetUniformLocation(program_obj.programID, "V");
+    program_obj.uniformID_Model = glGetUniformLocation(program_obj.programID, "M");
+    program_obj.uniformID_Camera = glGetUniformLocation(program_obj.programID, "CameraPos_worldspace");
+    program_obj.uniformID_Radiance = glGetUniformLocation(program_obj.programID, "radianceDistribution");
     
-    // Load the texture
+    vec4 data[20][20][20];
+    for (int i = 0; i < 20; i++)
+    for (int j = 0; j < 20; j++)
+    for (int k = 0; k < 20; k++)
+    if (i>10 && j>10 &&k > 10) data[i][j][k] = vec4(i*0.01, j*0.01, k*0.01, 1);
+    else data[i][j][k] = vec4(0,0,0,1);
+    /*
+    if (-3<i-10 && i-10<3 && -3<j-10 && j-10<3 && -3<k-10 && k-10<3) {
+        
+    }
+    else data[i][j][k] = vec4(0,0,0,1);
+    */
+    
+    GLuint texture_radiance;
+    glGenTextures(1, &texture_radiance);
+    glBindTexture(GL_TEXTURE_3D, texture_radiance);
+    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_R, GL_REPEAT);
+    glTexImage3D(GL_TEXTURE_3D, 0, GL_RGBA, 20, 20, 20, 0, GL_RGBA, GL_FLOAT, data);
+    
+    controller.init(window);
     bgTexture.loadBMP("background.bmp");
     text2d.init("Holstein.DDS");
     
@@ -148,21 +177,23 @@ int Render::run() {
         // Clear the screen
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         
-        // Use our shader
-        glUseProgram(program_std.programID);
-        
-        
         controller.update();
-        glUniformMatrix4fv(program_std.uniformID_View, 1, GL_FALSE, &controller.View[0][0]);
-        
-        
+    
         glUniform3f(program_std.uniformID_Light, controller.lightPos.x, controller.lightPos.y, controller.lightPos.z);
 
         // Draw m_object
         
+        // Use our shader
+        glUseProgram(program_obj.programID);
+        
         // send data to shader
-        glUniformMatrix4fv(program_std.uniformID_MVP, 1, GL_FALSE, &controller.MVP_object[0][0]);
-        glUniformMatrix4fv(program_std.uniformID_Model, 1, GL_FALSE, &controller.Model_object[0][0]);
+        glUniformMatrix4fv(program_obj.uniformID_View, 1, GL_FALSE, &controller.View[0][0]);
+        glUniformMatrix4fv(program_obj.uniformID_Model, 1, GL_FALSE, &controller.Model_object[0][0]);
+        glUniformMatrix4fv(program_obj.uniformID_MVP, 1, GL_FALSE, &controller.MVP_object[0][0]);
+        glUniform3f(program_obj.uniformID_Camera, controller.camera.x, controller.camera.y, controller.camera.z);
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, texture_radiance);
+        glUniform1i(program_obj.uniformID_Radiance, 0);
         
         // attribute buffer
         glEnableVertexAttribArray(0);
@@ -184,8 +215,16 @@ int Render::run() {
         glDisableVertexAttribArray(2);
         
         // Draw m_background
-        glUniformMatrix4fv(program_std.uniformID_MVP, 1, GL_FALSE, &controller.MVP_background[0][0]);
+        
+        // Use our shader
+        glUseProgram(program_std.programID);
+        
+        glUniformMatrix4fv(program_std.uniformID_View, 1, GL_FALSE, &controller.View[0][0]);
         glUniformMatrix4fv(program_std.uniformID_Model, 1, GL_FALSE, &controller.Model_background[0][0]);
+        glUniformMatrix4fv(program_std.uniformID_MVP, 1, GL_FALSE, &controller.MVP_background[0][0]);
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, bgTexture.textureID);
+        glUniform1i(program_std.uniformID_Texture, 0);
         
         // attribute buffer
         glEnableVertexAttribArray(0);
@@ -205,6 +244,7 @@ int Render::run() {
         glDisableVertexAttribArray(0);
         glDisableVertexAttribArray(1);
         glDisableVertexAttribArray(2);
+        
         
         
         char text[256];

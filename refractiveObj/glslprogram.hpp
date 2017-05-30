@@ -24,12 +24,17 @@ private:
 public:
     GLuint programID;
     
-    // program_std
     GLuint uniformID_MVP;
     GLuint uniformID_Model;
     GLuint uniformID_View;
+    
+    // program_std
     GLuint uniformID_Light;
     GLuint uniformID_Texture;
+    
+    // program_obj
+    GLuint uniformID_Radiance;
+    GLuint uniformID_Camera;
     
     GLSLProgram();
     ~GLSLProgram();
