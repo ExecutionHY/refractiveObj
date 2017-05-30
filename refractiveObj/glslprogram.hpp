@@ -15,13 +15,24 @@
 #include <cstdlib>
 #include <fstream>
 #include <vector>
+using namespace std;
+
+extern string dir;
 
 class GLSLProgram {
 private:
 public:
+    GLuint programID;
+    
+    // program_std
+    GLuint uniformID_MVP;
+    GLuint uniformID_Model;
+    GLuint uniformID_View;
+    GLuint uniformID_Light;
+    GLuint uniformID_Texture;
+    
     GLSLProgram();
     ~GLSLProgram();
-    GLuint programID;
     bool initShader(const char * vertex_file_path,const char * fragment_file_path);
     
 };

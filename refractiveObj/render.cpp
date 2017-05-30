@@ -65,11 +65,8 @@ Render::~Render() {
     glDeleteBuffers(1, &normalbuffer_background);
     glDeleteBuffers(1, &elementbuffer_background);
     
-    
+    // Clean up VAO
     glDeleteVertexArrays(1, &VertexArrayID);
-    glDeleteProgram(program_std.programID);
-    glDeleteTextures(1, &bgTexture.texture);
-
     
     // Close OpenGL window and terminate GLFW
     glfwTerminate();
@@ -132,21 +129,19 @@ int Render::run() {
         exit(-1);
     }
     
+    // Get handles for our uniforms
+    program_std.uniformID_MVP = glGetUniformLocation(program_std.programID, "MVP");
+    program_std.uniformID_View = glGetUniformLocation(program_std.programID, "V");
+    program_std.uniformID_Model = glGetUniformLocation(program_std.programID, "M");
+    program_std.uniformID_Light = glGetUniformLocation(program_std.programID, "LightPosition_worldspace");
+    program_std.uniformID_Texture  = glGetUniformLocation(program_std.programID, "myTextureSampler");
+    
     controller.init(window);
-    // Get a handle for our "MVP" uniform
-    controller.MVPMatrixID = glGetUniformLocation(program_std.programID, "MVP");
-    controller.ViewMatrixID = glGetUniformLocation(program_std.programID, "V");
-    controller.ModelMatrixID = glGetUniformLocation(program_std.programID, "M");
-    // Get a handle for our "LightPosition" uniform
-    controller.LightID = glGetUniformLocation(program_std.programID, "LightPosition_worldspace");
     
     // Load the texture
-    bgTexture.loadBMP("/Users/mac/Codes/refractiveObj/background.bmp");
-    // Get a handle for our "myTextureSampler" uniform
-    bgTexture.textureID  = glGetUniformLocation(program_std.programID, "myTextureSampler");
+    bgTexture.loadBMP("background.bmp");
+    text2d.init("Holstein.DDS");
     
-    
-
     loadModel();
     
     do{
@@ -158,16 +153,16 @@ int Render::run() {
         
         
         controller.update();
-        glUniformMatrix4fv(controller.ViewMatrixID, 1, GL_FALSE, &controller.View[0][0]);
+        glUniformMatrix4fv(program_std.uniformID_View, 1, GL_FALSE, &controller.View[0][0]);
         
         
-        glUniform3f(controller.LightID, controller.lightPos.x, controller.lightPos.y, controller.lightPos.z);
+        glUniform3f(program_std.uniformID_Light, controller.lightPos.x, controller.lightPos.y, controller.lightPos.z);
 
         // Draw m_object
         
         // send data to shader
-        glUniformMatrix4fv(controller.MVPMatrixID, 1, GL_FALSE, &controller.MVP_object[0][0]);
-        glUniformMatrix4fv(controller.ModelMatrixID, 1, GL_FALSE, &controller.Model_object[0][0]);
+        glUniformMatrix4fv(program_std.uniformID_MVP, 1, GL_FALSE, &controller.MVP_object[0][0]);
+        glUniformMatrix4fv(program_std.uniformID_Model, 1, GL_FALSE, &controller.Model_object[0][0]);
         
         // attribute buffer
         glEnableVertexAttribArray(0);
@@ -189,8 +184,8 @@ int Render::run() {
         glDisableVertexAttribArray(2);
         
         // Draw m_background
-        glUniformMatrix4fv(controller.MVPMatrixID, 1, GL_FALSE, &controller.MVP_background[0][0]);
-        glUniformMatrix4fv(controller.ModelMatrixID, 1, GL_FALSE, &controller.Model_background[0][0]);
+        glUniformMatrix4fv(program_std.uniformID_MVP, 1, GL_FALSE, &controller.MVP_background[0][0]);
+        glUniformMatrix4fv(program_std.uniformID_Model, 1, GL_FALSE, &controller.Model_background[0][0]);
         
         // attribute buffer
         glEnableVertexAttribArray(0);
@@ -210,6 +205,11 @@ int Render::run() {
         glDisableVertexAttribArray(0);
         glDisableVertexAttribArray(1);
         glDisableVertexAttribArray(2);
+        
+        
+        char text[256];
+        sprintf(text,"fps: %.2f, time: %.2f s", controller.fps, glfwGetTime() );
+        text2d.print(text, 10, 560, 20);
         
         
         // Swap buffers

@@ -41,11 +41,12 @@ void Controller::init(GLFWwindow *window) {
     MVP_background = Projection * View * Model_background;
     lightPos = vec3(4,4,4);
 
+    lastTime = glfwGetTime();
+    frameCount = 0;
 }
 
 
 void Controller::update() {
-    // mouse - left button to drag the view
     
     
     // Get mous position
@@ -73,7 +74,7 @@ void Controller::update() {
         float horizontalAngle_rotate, verticalAngle_rotate;
         horizontalAngle_rotate += mouseSpeed * float(lastXpos-xpos);
         verticalAngle_rotate += mouseSpeed * float(lastYpos-ypos);
-        Model_object = rotate(Model_object, -horizontalAngle_rotate, vec3(0,1,0));
+        Model_object = rotate(Model_object, -horizontalAngle_rotate, up);
         Model_object = rotate(Model_object, -verticalAngle_rotate, right);
     }
     
@@ -91,4 +92,13 @@ void Controller::update() {
     
     lastXpos = xpos;
     lastYpos = ypos;
+    
+    // Measure the fps
+    double currentTime = glfwGetTime();
+    frameCount++;
+    if (currentTime - lastTime >= 1.0) {
+        fps = frameCount;
+        frameCount = 0;
+        lastTime += 1.0;
+    }
 }

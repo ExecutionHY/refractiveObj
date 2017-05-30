@@ -7,13 +7,13 @@
 //
 
 #include "glslprogram.hpp"
-using namespace std;
 
 GLSLProgram::GLSLProgram() {
     
 }
 GLSLProgram::~GLSLProgram() {
-    
+    // clear the program
+    glDeleteProgram(programID);
 }
 //#include <unistd.h>
 bool GLSLProgram::initShader(const char * vertex_file_path,const char * fragment_file_path){
@@ -26,8 +26,8 @@ bool GLSLProgram::initShader(const char * vertex_file_path,const char * fragment
     GLuint VertexShaderID = glCreateShader(GL_VERTEX_SHADER);
     GLuint FragmentShaderID = glCreateShader(GL_FRAGMENT_SHADER);
     
-    string vpath = "/Users/mac/Codes/refractiveObj/shader/" + string(vertex_file_path);
-    string fpath = "/Users/mac/Codes/refractiveObj/shader/" + string(fragment_file_path);
+    string vpath = dir + "shader/" + string(vertex_file_path);
+    string fpath = dir + "shader/" + string(fragment_file_path);
     
     // Read the Vertex Shader code from the file
     string VertexShaderCode;

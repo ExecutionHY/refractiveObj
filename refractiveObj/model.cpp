@@ -158,7 +158,7 @@ void Model::indexVBO(
 
 
 void Model::init(const char *path) {
-    string file = string("/Users/mac/Codes/refractiveObj/") + string(path);
+    string file = dir + string(path);
     
     std::vector<glm::vec3> vertices;
     std::vector<glm::vec2> uvs;

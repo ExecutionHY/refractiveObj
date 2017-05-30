@@ -32,10 +32,9 @@ private:
     float dist;
     bool zPressed;
     bool xPressed;
+    double lastTime;
+    int frameCount;
 public:
-    GLuint MVPMatrixID;
-    GLuint ModelMatrixID;
-    GLuint ViewMatrixID;
     mat4 Projection;
     mat4 View;
     mat4 Model_object;
@@ -43,8 +42,9 @@ public:
     mat4 Model_background;
     mat4 MVP_background;
     
-    GLuint LightID;
     vec3 lightPos;
+    
+    float fps;
     
     Controller();
     ~Controller();

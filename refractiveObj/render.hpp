@@ -20,6 +20,7 @@ using namespace glm;
 #include "model.hpp"
 #include "controller.hpp"
 #include "texture.hpp"
+#include "text2D.hpp"
 
 class Render {
 private:
@@ -43,6 +44,7 @@ private:
     void loadModel();
 
     Texture bgTexture;
+    Text2D text2d;
 
 public:
     Render();

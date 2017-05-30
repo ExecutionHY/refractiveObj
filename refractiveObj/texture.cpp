@@ -8,11 +8,16 @@
 
 #include "texture.hpp"
 Texture::Texture() {}
-Texture::~Texture() {}
+Texture::~Texture() {
+    // clear the texture
+    glDeleteTextures(1, &textureID);
+}
 
 void Texture::loadBMP(const char * imagepath){
     
     printf("Reading image %s\n", imagepath);
+    
+    string path = dir + string(imagepath);
     
     // Data read from the header of the BMP file
     unsigned char header[54];
@@ -23,7 +28,7 @@ void Texture::loadBMP(const char * imagepath){
     unsigned char * data;
     
     // Open the file
-    FILE * file = fopen(imagepath,"rb");
+    FILE * file = fopen(path.c_str(),"rb");
     if (!file) {
         printf("%s could not be opened. Are you in the right directory ? Don't forget to read the FAQ !\n", imagepath);
         getchar();
@@ -72,7 +77,6 @@ void Texture::loadBMP(const char * imagepath){
     fclose (file);
     
     // Create one OpenGL texture
-    GLuint textureID;
     glGenTextures(1, &textureID);
     
     // "Bind" the newly created texture : all future texture functions will modify this texture
@@ -95,6 +99,100 @@ void Texture::loadBMP(const char * imagepath){
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR); 
     glGenerateMipmap(GL_TEXTURE_2D);
     
-    // Return the ID of the texture we just created
-    this->texture = textureID;
+}
+
+
+#define FOURCC_DXT1 0x31545844 // Equivalent to "DXT1" in ASCII
+#define FOURCC_DXT3 0x33545844 // Equivalent to "DXT3" in ASCII
+#define FOURCC_DXT5 0x35545844 // Equivalent to "DXT5" in ASCII
+
+void Texture::loadDDS(const char * imagepath) {
+    
+    printf("Reading image %s\n", imagepath);
+    unsigned char header[124];
+    
+    FILE *fp;
+    
+    string path = dir + string(imagepath);
+    /* try to open the file */
+    fp = fopen(path.c_str(), "rb");
+    if (fp == NULL){
+        printf("%s could not be opened. Are you in the right directory ? Don't forget to read the FAQ !\n", imagepath);
+        getchar();
+        exit(-1);
+    }
+    
+    /* verify the type of file */
+    char filecode[4];
+    fread(filecode, 1, 4, fp);
+    if (strncmp(filecode, "DDS ", 4) != 0) {
+        fclose(fp);
+        exit(-1);
+    }
+    
+    /* get the surface desc */
+    fread(&header, 124, 1, fp);
+    
+    unsigned int height      = *(unsigned int*)&(header[8 ]);
+    unsigned int width	     = *(unsigned int*)&(header[12]);
+    unsigned int linearSize	 = *(unsigned int*)&(header[16]);
+    unsigned int mipMapCount = *(unsigned int*)&(header[24]);
+    unsigned int fourCC      = *(unsigned int*)&(header[80]);
+    
+    
+    unsigned char * buffer;
+    unsigned int bufsize;
+    /* how big is it going to be including all mipmaps? */
+    bufsize = mipMapCount > 1 ? linearSize * 2 : linearSize;
+    buffer = (unsigned char*)malloc(bufsize * sizeof(unsigned char));
+    fread(buffer, 1, bufsize, fp);
+    /* close the file pointer */
+    fclose(fp);
+    
+    unsigned int format;
+    switch(fourCC)
+    {
+        case FOURCC_DXT1:
+        format = GL_COMPRESSED_RGBA_S3TC_DXT1_EXT;
+        break;
+        case FOURCC_DXT3:
+        format = GL_COMPRESSED_RGBA_S3TC_DXT3_EXT;
+        break;
+        case FOURCC_DXT5:
+        format = GL_COMPRESSED_RGBA_S3TC_DXT5_EXT;
+        break;
+        default:
+        free(buffer);
+        exit(-1);
+    }
+    
+    // Create one OpenGL texture
+    glGenTextures(1, &textureID);
+    
+    // "Bind" the newly created texture : all future texture functions will modify this texture
+    glBindTexture(GL_TEXTURE_2D, textureID);
+    glPixelStorei(GL_UNPACK_ALIGNMENT,1);
+    
+    unsigned int blockSize = (format == GL_COMPRESSED_RGBA_S3TC_DXT1_EXT) ? 8 : 16;
+    unsigned int offset = 0;
+    
+    /* load the mipmaps */
+    for (unsigned int level = 0; level < mipMapCount && (width || height); ++level)
+    {
+        unsigned int size = ((width+3)/4)*((height+3)/4)*blockSize;
+        glCompressedTexImage2D(GL_TEXTURE_2D, level, format, width, height,
+                               0, size, buffer + offset);
+        
+        offset += size; 
+        width  /= 2; 
+        height /= 2; 
+        
+        // Deal with Non-Power-Of-Two textures. This code is not included in the webpage to reduce clutter.
+        if(width < 1) width = 1;
+        if(height < 1) height = 1;
+        
+    } 
+    
+    free(buffer); 
+    
 }

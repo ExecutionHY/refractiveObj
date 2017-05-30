@@ -7,7 +7,9 @@
 //
 
 #include <iostream>
-#include "main.h"
+#include "render.hpp"
+
+string dir = "/Users/mac/Codes/refractiveObj/";
 
 int main(int argc, const char * argv[]) {
     

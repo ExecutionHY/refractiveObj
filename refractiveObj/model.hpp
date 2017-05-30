@@ -16,6 +16,8 @@
 #include <string>
 using namespace std;
 
+extern string dir;
+
 #include <GL/glew.h>
 #include <glm/glm.hpp>
 using namespace glm;

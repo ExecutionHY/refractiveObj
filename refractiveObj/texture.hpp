@@ -10,11 +10,14 @@
 #define texture_hpp
 
 #include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#include <cstdlib>
+#include <string>
+using namespace std;
 
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
+
+extern string dir;
 
 class Texture {
 private:
@@ -22,8 +25,8 @@ public:
     Texture();
     ~Texture();
     void loadBMP(const char * imagepath);
+    void loadDDS(const char * imagepath);
     
-    GLuint texture;
     GLuint textureID;
 };
 

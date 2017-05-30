@@ -15,6 +15,7 @@
 		045C3E3A1ED9991B00870FC4 /* libglfw.3.2.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 045C3E391ED9991B00870FC4 /* libglfw.3.2.dylib */; };
 		045C3E3D1ED99D4400870FC4 /* glslprogram.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 045C3E3B1ED99D4400870FC4 /* glslprogram.cpp */; };
 		045C3E411EDA789C00870FC4 /* controller.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 045C3E3F1EDA789C00870FC4 /* controller.cpp */; };
+		04ACD1BA1EDD2526000789BA /* text2D.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 04ACD1B81EDD2526000789BA /* text2D.cpp */; };
 		04E68AEA1EDC42DE0044EA5E /* texture.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 04E68AE81EDC42DE0044EA5E /* texture.cpp */; };
 /* End PBXBuildFile section */
 
@@ -33,7 +34,6 @@
 /* Begin PBXFileReference section */
 		041A0D5B1ED9915A002B4B84 /* refractiveObj */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = refractiveObj; sourceTree = BUILT_PRODUCTS_DIR; };
 		041A0D5E1ED9915A002B4B84 /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
-		045C3E2D1ED9935E00870FC4 /* main.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = main.h; sourceTree = "<group>"; };
 		045C3E2E1ED9941D00870FC4 /* render.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = render.cpp; sourceTree = "<group>"; };
 		045C3E2F1ED9941D00870FC4 /* render.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = render.hpp; sourceTree = "<group>"; };
 		045C3E311ED9961D00870FC4 /* model.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = model.cpp; sourceTree = "<group>"; };
@@ -46,6 +46,8 @@
 		045C3E3E1ED9B07C00870FC4 /* shader */ = {isa = PBXFileReference; lastKnownFileType = folder; path = shader; sourceTree = "<group>"; };
 		045C3E3F1EDA789C00870FC4 /* controller.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = controller.cpp; sourceTree = "<group>"; };
 		045C3E401EDA789C00870FC4 /* controller.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = controller.hpp; sourceTree = "<group>"; };
+		04ACD1B81EDD2526000789BA /* text2D.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = text2D.cpp; sourceTree = "<group>"; };
+		04ACD1B91EDD2526000789BA /* text2D.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = text2D.hpp; sourceTree = "<group>"; };
 		04E68AE81EDC42DE0044EA5E /* texture.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = texture.cpp; sourceTree = "<group>"; };
 		04E68AE91EDC42DE0044EA5E /* texture.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = texture.hpp; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -86,7 +88,6 @@
 			isa = PBXGroup;
 			children = (
 				041A0D5E1ED9915A002B4B84 /* main.cpp */,
-				045C3E2D1ED9935E00870FC4 /* main.h */,
 				045C3E2E1ED9941D00870FC4 /* render.cpp */,
 				045C3E2F1ED9941D00870FC4 /* render.hpp */,
 				045C3E311ED9961D00870FC4 /* model.cpp */,
@@ -97,6 +98,8 @@
 				045C3E401EDA789C00870FC4 /* controller.hpp */,
 				04E68AE81EDC42DE0044EA5E /* texture.cpp */,
 				04E68AE91EDC42DE0044EA5E /* texture.hpp */,
+				04ACD1B81EDD2526000789BA /* text2D.cpp */,
+				04ACD1B91EDD2526000789BA /* text2D.hpp */,
 			);
 			path = refractiveObj;
 			sourceTree = "<group>";
@@ -173,6 +176,7 @@
 				045C3E411EDA789C00870FC4 /* controller.cpp in Sources */,
 				04E68AEA1EDC42DE0044EA5E /* texture.cpp in Sources */,
 				045C3E3D1ED99D4400870FC4 /* glslprogram.cpp in Sources */,
+				04ACD1BA1EDD2526000789BA /* text2D.cpp in Sources */,
 				045C3E331ED9961D00870FC4 /* model.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
