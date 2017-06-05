@@ -20,7 +20,12 @@ extern string dir;
 
 #include <GL/glew.h>
 #include <glm/glm.hpp>
+#include <glm/gtx/intersect.hpp>
 using namespace glm;
+
+#define VOXEL_CNT 20
+extern vec4 refIndex[VOXEL_CNT][VOXEL_CNT][VOXEL_CNT];
+extern vec4 radiance[VOXEL_CNT][VOXEL_CNT][VOXEL_CNT];
 
 struct PackedVertex{
     glm::vec3 position;
@@ -53,6 +58,7 @@ private:
                          std::vector<glm::vec2> & out_uvs,
                          std::vector<glm::vec3> & out_normals
                   );
+	bool inside(float x, float y, float z);
 public:
     Model();
     ~Model();
@@ -61,6 +67,8 @@ public:
     vector<vec2> indexed_uvs;
     vector<vec3> indexed_normals;
     void init(const char *path);
+	bool voxelize();
+	void printData();
 };
 
 #endif /* model_hpp */

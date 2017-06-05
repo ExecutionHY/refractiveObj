@@ -32,14 +32,15 @@ public:
     GLuint uniformID_Light;
     GLuint uniformID_Texture;
     
-    // program_obj
-    GLuint uniformID_Radiance;
+	// program_obj
+	GLuint uniformID_RefIndex;
+	GLuint uniformID_Radiance;
     GLuint uniformID_Camera;
     
     GLSLProgram();
     ~GLSLProgram();
-    bool initShader(const char * vertex_file_path,const char * fragment_file_path);
-    
+    bool initShader(const char * vertex_file_path,const char * fragment_file_path, const char * geometry_file_path);
+	bool initComputeShader(const char * compute_file_path);
 };
 
 #endif /* glslprogram_hpp */

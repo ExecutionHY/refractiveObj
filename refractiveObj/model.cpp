@@ -21,7 +21,6 @@ bool Model::loadOBJ(const char * path,
                     std::vector<glm::vec2> & out_uvs,
                     std::vector<glm::vec3> & out_normals
                     ) {
-    printf("Loading OBJ file %s...\n", path);
     
     std::vector<unsigned int> vertexIndices, uvIndices, normalIndices;
     std::vector<glm::vec3> temp_vertices;
@@ -158,13 +157,56 @@ void Model::indexVBO(
 
 
 void Model::init(const char *path) {
-    string file = dir + string(path);
+    string file = dir + "models/" + string(path);
     
     std::vector<glm::vec3> vertices;
     std::vector<glm::vec2> uvs;
     std::vector<glm::vec3> normals;
-    
+	
+	printf("Loading OBJ file %s...", path);
+	
     if (loadOBJ(file.c_str(), vertices, uvs, normals) == false) exit(-1);
     
     indexVBO(vertices, uvs, normals, indices, indexed_vertices, indexed_uvs, indexed_normals);
+	printf(" %lu triangles.\n", indices.size()/3);
+}
+
+bool Model::inside(float x, float y, float z) {
+	int intersectCnt = 0;
+	vec3 intersects;
+	for (int i = 0; i < indices.size(); i += 3) {
+		if (intersectRayTriangle(vec3(x, y, z), vec3(1,0,0), indexed_vertices[indices[i]], indexed_vertices[indices[i+1]], indexed_vertices[indices[i+2]], intersects))
+			intersectCnt++;
+		/*
+		else {
+			printf("intersects = (%3f, %3f, %3f)\n", intersects.x, intersects.y, intersects.z);
+		}
+		
+		if (-0.0001 < x && x < 0.0001 && -0.0001 < y && y < 0.0001 && -0.0001 < z && z < 0.0001)
+			printf("(%3f, %3f, %3f) -> (%3f, %3f, %3f), (%3f, %3f, %3f), (%3f, %3f, %3f), cnt = %d\n", x, y, z, indexed_vertices[indices[i]].x, indexed_vertices[indices[i]].y, indexed_vertices[indices[i]].z, indexed_vertices[indices[i+1]].x, indexed_vertices[indices[i+1]].y, indexed_vertices[indices[i+1]].z, indexed_vertices[indices[i+2]].x, indexed_vertices[indices[i+2]].y, indexed_vertices[indices[i+2]].z, intersectCnt);
+		 */
+	}
+	if (intersectCnt % 2 == 1) return true;
+	else return false;
+}
+
+bool Model::voxelize() {
+	printf("Voxelizing mesh\n");
+	
+	for (int i = 0; i < VOXEL_CNT; i++)
+		for (int j = 0; j < VOXEL_CNT; j++)
+			for (int k = 0; k < VOXEL_CNT; k++)
+				if (inside((i-VOXEL_CNT/2)*0.1/(VOXEL_CNT/2), (j-VOXEL_CNT/2)*0.1/(VOXEL_CNT/2), (k-VOXEL_CNT/2)*0.1/(VOXEL_CNT/2))) {
+					refIndex[i][j][k] = vec4(i*0.01, j*0.01, k*0.01, 0.05);
+				}
+	
+	
+	return true;
+}
+
+void Model::printData() {
+	for (int i = 0; i < VOXEL_CNT; i++)
+		for (int j = 0; j < VOXEL_CNT; j++)
+			for (int k = 0; k < VOXEL_CNT; k++)
+				printf("i: %2d, j: %2d, k: %2d, (%6f, %6f, %6f)\n", i, j, k, refIndex[i][j][k].x, refIndex[i][j][k].y, refIndex[i][j][k].z);
 }

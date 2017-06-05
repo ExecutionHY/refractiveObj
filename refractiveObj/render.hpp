@@ -22,6 +22,8 @@ using namespace glm;
 #include "texture.hpp"
 #include "text2D.hpp"
 
+extern string dir;
+
 class Render {
 private:
     GLFWwindow *window;
