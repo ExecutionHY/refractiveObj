@@ -197,10 +197,10 @@ int Render::run() {
         glUniformMatrix4fv(program_obj.uniformID_MVP, 1, GL_FALSE, &controller.MVP_object[0][0]);
 		glUniform3f(program_obj.uniformID_Camera, controller.camera.x, controller.camera.y, controller.camera.z);
 		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, texture_radiance);
+		glBindTexture(GL_TEXTURE_3D, texture_radiance);
 		glUniform1i(program_obj.uniformID_Radiance, 0);
 		glActiveTexture(GL_TEXTURE1);
-		glBindTexture(GL_TEXTURE_2D, texture_refIndex);
+		glBindTexture(GL_TEXTURE_3D, texture_refIndex);
 		glUniform1i(program_obj.uniformID_RefIndex, 1);
 		
         // attribute buffer

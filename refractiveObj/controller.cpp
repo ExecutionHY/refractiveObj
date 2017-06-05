@@ -35,7 +35,7 @@ void Controller::init(GLFWwindow *window) {
     dist = 5.0f;
     Projection = perspective(45.0f, 4.0f/3.0f, 0.1f, 100.0f);
     View = lookAt(direction*(-1.0f)*dist, vec3(0,0,0), vec3(0,1,0));
-    Model_object = mat4(1.0f);
+    Model_object = mat4(0.65f);
     MVP_object = Projection * View * Model_object;
     Model_background = mat4(1.0f);
     MVP_background = Projection * View * Model_background;

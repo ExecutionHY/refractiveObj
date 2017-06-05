@@ -17,7 +17,7 @@ vec3 dirRemain = vec3(0, 0, 0);
 // When they are large enough, they will reflect on next position.
 
 // find next voxel according to direction and footstep
-vec3 nextPos(vec3 pos, vec3 dir, int footstep) {
+vec3 nextPos(vec3 pos, vec3 dir, float footstep) {
 	vec3 npos = pos;
 	dirRemain += dir;
 	float dirx = abs(dirRemain.x);
@@ -30,12 +30,12 @@ vec3 nextPos(vec3 pos, vec3 dir, int footstep) {
 		else npos += vec3(-1, 0, 0)*footstep;
 		dirRemain.x = 0;
 	}
-	if (diry >= dirx && diry >= dirx) {
+	else if (diry >= dirx && diry >= dirx) {
 		if (dirRemain.y > 0) npos += vec3(0, 1, 0)*footstep;
 		else npos += vec3(0, -1, 0)*footstep;
 		dirRemain.y = 0;
 	}
-	if (dirz >= dirx && dirz >= diry) {
+	else if (dirz >= dirx && dirz >= diry) {
 		if (dirRemain.z > 0) npos += vec3(0, 0, 1)*footstep;
 		else npos += vec3(0, 0, -1)*footstep;
 		dirRemain.z = 0;
@@ -47,11 +47,22 @@ void main(){
     
     vec3 radiance = vec3(0, 0, 0);
     vec3 pos = Position_worldspace;
-	vec3 dir = EyeDirection_worldspace;
+	vec3 dir = normalize(EyeDirection_worldspace);
+	vec3 npos;
+	float refIndexRatio;
+	float cnt = 0.00; // for debug
 	
-    for (int i = 0; i < 3; i++) {
-        radiance += texture(radianceDistribution, (pos+vec3(1,1,1))*0.5).rgb;
-        pos = nextPos(pos, dir, 1);
+    for (int i = 0; i < 20; i++) {
+		if (abs(pos.x) > 1 || abs(pos.y) > 1 || abs(pos.z) > 1) break;
+		if (texture(refractiveIndex, (pos+vec3(1,1,1))*0.5).r > 0.1001) {
+			radiance += texture(radianceDistribution, (pos+vec3(1,1,1))*0.5).rgb;
+			cnt += 0.05;
+		}
+        npos = nextPos(pos, dir, 0.05);
+		refIndexRatio = texture(refractiveIndex, (pos+vec3(1,1,1))*0.5).r / texture(refractiveIndex, (npos+vec3(1,1,1))*0.5).r;
+		dir = refract(dir, normalize(pos-npos), refIndexRatio);
+		// For a given incident vector I, surface normal N and ratio of indices of refraction, eta, refract returns the refraction vector, R.
+		pos = npos;
     }
 	
     color = radiance;

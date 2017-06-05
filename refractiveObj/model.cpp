@@ -197,8 +197,14 @@ bool Model::voxelize() {
 		for (int j = 0; j < VOXEL_CNT; j++)
 			for (int k = 0; k < VOXEL_CNT; k++)
 				if (inside((i-VOXEL_CNT/2)*0.1/(VOXEL_CNT/2), (j-VOXEL_CNT/2)*0.1/(VOXEL_CNT/2), (k-VOXEL_CNT/2)*0.1/(VOXEL_CNT/2))) {
-					refIndex[i][j][k] = vec4(i*0.01, j*0.01, k*0.01, 0.05);
+					refIndex[i][j][k] = vec4(0.15, 0.0, 0.0, 0.0);
 				}
+				else refIndex[i][j][k] = vec4(0.1, 0.0, 0.0, 0.0);
+	
+	for (int i = 0; i < VOXEL_CNT; i++)
+		for (int j = 0; j < VOXEL_CNT; j++)
+			for (int k = 0; k < VOXEL_CNT; k++)
+				radiance[i][j][k] = vec4(0.01, 0.02, 0.02, 1);
 	
 	
 	return true;
@@ -208,5 +214,5 @@ void Model::printData() {
 	for (int i = 0; i < VOXEL_CNT; i++)
 		for (int j = 0; j < VOXEL_CNT; j++)
 			for (int k = 0; k < VOXEL_CNT; k++)
-				printf("i: %2d, j: %2d, k: %2d, (%6f, %6f, %6f)\n", i, j, k, refIndex[i][j][k].x, refIndex[i][j][k].y, refIndex[i][j][k].z);
+				printf("i: %2d, j: %2d, k: %2d, ri = %6f,  (%3f, %3f, %3f)\n", i, j, k, refIndex[i][j][k].x, radiance[i][j][k].x, radiance[i][j][k].y, radiance[i][j][k].z);
 }
