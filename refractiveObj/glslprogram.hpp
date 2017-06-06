@@ -36,6 +36,7 @@ public:
 	GLuint uniformID_RefIndex;
 	GLuint uniformID_Radiance;
     GLuint uniformID_Camera;
+	GLuint uniformID_Vcnt;
     
     GLSLProgram();
     ~GLSLProgram();

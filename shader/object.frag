@@ -10,6 +10,7 @@ out vec3 color;
 // Values that stay constant for the whole mesh.
 uniform sampler3D radianceDistribution;
 uniform sampler3D refractiveIndex;
+uniform int voxel_cnt;
 
 vec3 dirRemain = vec3(0, 0, 0);
 // Some dimensions of direction may be too small to affect nextPos,
@@ -52,13 +53,13 @@ void main(){
 	float refIndexRatio;
 	float cnt = 0.00; // for debug
 	
-    for (int i = 0; i < 20; i++) {
+    for (int i = 0; i < voxel_cnt; i++) {
 		if (abs(pos.x) > 1 || abs(pos.y) > 1 || abs(pos.z) > 1) break;
-		if (texture(refractiveIndex, (pos+vec3(1,1,1))*0.5).r > 0.1001) {
+		if (texture(refractiveIndex, (pos+vec3(1,1,1))*0.5).r > 1.001) {
 			radiance += texture(radianceDistribution, (pos+vec3(1,1,1))*0.5).rgb;
-			cnt += 0.05;
+			cnt += 1.0/voxel_cnt;
 		}
-        npos = nextPos(pos, dir, 0.05);
+        npos = nextPos(pos, dir, 1.0/voxel_cnt);
 		refIndexRatio = texture(refractiveIndex, (pos+vec3(1,1,1))*0.5).r / texture(refractiveIndex, (npos+vec3(1,1,1))*0.5).r;
 		dir = refract(dir, normalize(pos-npos), refIndexRatio);
 		// For a given incident vector I, surface normal N and ratio of indices of refraction, eta, refract returns the refraction vector, R.

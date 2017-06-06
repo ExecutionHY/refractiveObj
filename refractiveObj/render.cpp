@@ -144,6 +144,7 @@ int Render::run() {
 	program_obj.uniformID_Camera = glGetUniformLocation(program_obj.programID, "CameraPos_worldspace");
 	program_obj.uniformID_Radiance = glGetUniformLocation(program_obj.programID, "radianceDistribution");
 	program_obj.uniformID_RefIndex = glGetUniformLocation(program_obj.programID, "refractiveIndex");
+	program_obj.uniformID_Vcnt = glGetUniformLocation(program_obj.programID, "voxel_cnt");
 	
 	
 	
@@ -153,7 +154,7 @@ int Render::run() {
     
 	loadModel();
 	
-	m_object.voxelize();
+	m_object.init();
 	m_object.printData();
 	
 	GLuint texture_refIndex;
@@ -202,6 +203,7 @@ int Render::run() {
 		glActiveTexture(GL_TEXTURE1);
 		glBindTexture(GL_TEXTURE_3D, texture_refIndex);
 		glUniform1i(program_obj.uniformID_RefIndex, 1);
+		glUniform1i(program_obj.uniformID_Vcnt, VOXEL_CNT);
 		
         // attribute buffer
         glEnableVertexAttribArray(0);

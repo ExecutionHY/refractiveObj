@@ -15,6 +15,7 @@
 		045C3E3A1ED9991B00870FC4 /* libglfw.3.2.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 045C3E391ED9991B00870FC4 /* libglfw.3.2.dylib */; };
 		045C3E3D1ED99D4400870FC4 /* glslprogram.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 045C3E3B1ED99D4400870FC4 /* glslprogram.cpp */; };
 		045C3E411EDA789C00870FC4 /* controller.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 045C3E3F1EDA789C00870FC4 /* controller.cpp */; };
+		04941E7E1EE6FC4000F29F5C /* voxelizer.cl in Sources */ = {isa = PBXBuildFile; fileRef = 04941E7D1EE6FC4000F29F5C /* voxelizer.cl */; };
 		04ACD1BA1EDD2526000789BA /* text2D.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 04ACD1B81EDD2526000789BA /* text2D.cpp */; };
 		04E68AEA1EDC42DE0044EA5E /* texture.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 04E68AE81EDC42DE0044EA5E /* texture.cpp */; };
 /* End PBXBuildFile section */
@@ -46,6 +47,7 @@
 		045C3E3E1ED9B07C00870FC4 /* shader */ = {isa = PBXFileReference; lastKnownFileType = folder; path = shader; sourceTree = "<group>"; };
 		045C3E3F1EDA789C00870FC4 /* controller.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = controller.cpp; sourceTree = "<group>"; };
 		045C3E401EDA789C00870FC4 /* controller.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = controller.hpp; sourceTree = "<group>"; };
+		04941E7D1EE6FC4000F29F5C /* voxelizer.cl */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.opencl; path = voxelizer.cl; sourceTree = "<group>"; };
 		04ACD1B81EDD2526000789BA /* text2D.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = text2D.cpp; sourceTree = "<group>"; };
 		04ACD1B91EDD2526000789BA /* text2D.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = text2D.hpp; sourceTree = "<group>"; };
 		04E68AE81EDC42DE0044EA5E /* texture.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = texture.cpp; sourceTree = "<group>"; };
@@ -87,6 +89,7 @@
 		041A0D5D1ED9915A002B4B84 /* refractiveObj */ = {
 			isa = PBXGroup;
 			children = (
+				04941E7D1EE6FC4000F29F5C /* voxelizer.cl */,
 				041A0D5E1ED9915A002B4B84 /* main.cpp */,
 				045C3E2E1ED9941D00870FC4 /* render.cpp */,
 				045C3E2F1ED9941D00870FC4 /* render.hpp */,
@@ -171,6 +174,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				04941E7E1EE6FC4000F29F5C /* voxelizer.cl in Sources */,
 				041A0D5F1ED9915A002B4B84 /* main.cpp in Sources */,
 				045C3E301ED9941D00870FC4 /* render.cpp in Sources */,
 				045C3E411EDA789C00870FC4 /* controller.cpp in Sources */,

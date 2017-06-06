@@ -23,7 +23,7 @@ extern string dir;
 #include <glm/gtx/intersect.hpp>
 using namespace glm;
 
-#define VOXEL_CNT 20
+#define VOXEL_CNT 32
 extern vec4 refIndex[VOXEL_CNT][VOXEL_CNT][VOXEL_CNT];
 extern vec4 radiance[VOXEL_CNT][VOXEL_CNT][VOXEL_CNT];
 
@@ -67,8 +67,9 @@ public:
     vector<vec2> indexed_uvs;
     vector<vec3> indexed_normals;
     void init(const char *path);
-	bool voxelize();
+	bool init();
 	void printData();
+	int voxelize_CL();
 };
 
 #endif /* model_hpp */
