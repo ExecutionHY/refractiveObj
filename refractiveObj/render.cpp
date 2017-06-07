@@ -143,7 +143,7 @@ int Render::run() {
     program_obj.uniformID_Model = glGetUniformLocation(program_obj.programID, "M");
 	program_obj.uniformID_Camera = glGetUniformLocation(program_obj.programID, "CameraPos_worldspace");
 	program_obj.uniformID_Radiance = glGetUniformLocation(program_obj.programID, "radianceDistribution");
-	program_obj.uniformID_RefIndex = glGetUniformLocation(program_obj.programID, "refractiveIndex");
+	program_obj.uniformID_GradN = glGetUniformLocation(program_obj.programID, "grad_n");
 	program_obj.uniformID_Vcnt = glGetUniformLocation(program_obj.programID, "voxel_cnt");
 	
 	
@@ -160,15 +160,15 @@ int Render::run() {
 	
 	printf("Voxelization time = %6f s\n", glfwGetTime()-t1);
 	
-	GLuint texture_refIndex;
-	glGenTextures(1, &texture_refIndex);
-	glBindTexture(GL_TEXTURE_3D, texture_refIndex);
+	GLuint texture_gradN;
+	glGenTextures(1, &texture_gradN);
+	glBindTexture(GL_TEXTURE_3D, texture_gradN);
 	glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 	glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 	glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_R, GL_REPEAT);
-	glTexImage3D(GL_TEXTURE_3D, 0, GL_RGBA, VOXEL_CNT, VOXEL_CNT, VOXEL_CNT, 0, GL_RGBA, GL_FLOAT, refIndex);
+	glTexImage3D(GL_TEXTURE_3D, 0, GL_RGBA, VOXEL_CNT, VOXEL_CNT, VOXEL_CNT, 0, GL_RGBA, GL_FLOAT, grad_n);
 	
 	GLuint texture_radiance;
 	glGenTextures(1, &texture_radiance);
@@ -201,11 +201,11 @@ int Render::run() {
         glUniformMatrix4fv(program_obj.uniformID_MVP, 1, GL_FALSE, &controller.MVP_object[0][0]);
 		glUniform3f(program_obj.uniformID_Camera, controller.camera.x, controller.camera.y, controller.camera.z);
 		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_3D, texture_radiance);
-		glUniform1i(program_obj.uniformID_Radiance, 0);
+		glBindTexture(GL_TEXTURE_3D, texture_gradN);
+		glUniform1i(program_obj.uniformID_GradN, 0);
 		glActiveTexture(GL_TEXTURE1);
-		glBindTexture(GL_TEXTURE_3D, texture_refIndex);
-		glUniform1i(program_obj.uniformID_RefIndex, 1);
+		glBindTexture(GL_TEXTURE_3D, texture_radiance);
+		glUniform1i(program_obj.uniformID_Radiance, 1);
 		glUniform1i(program_obj.uniformID_Vcnt, VOXEL_CNT);
 		
         // attribute buffer

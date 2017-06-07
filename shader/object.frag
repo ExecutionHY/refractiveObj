@@ -9,7 +9,7 @@ out vec3 color;
 
 // Values that stay constant for the whole mesh.
 uniform sampler3D radianceDistribution;
-uniform sampler3D refractiveIndex;
+uniform sampler3D grad_n;
 uniform int voxel_cnt;
 
 vec3 dirRemain = vec3(0, 0, 0);
@@ -47,23 +47,29 @@ vec3 nextPos(vec3 pos, vec3 dir, float footstep) {
 void main(){
     
     vec3 radiance = vec3(0, 0, 0);
-    vec3 pos = Position_worldspace;
+	float stepSize = 2.0/voxel_cnt;	// stepSize = voxel_width
+	
+	// pos: x_i, npos: x_{i+1}
+    vec3 pos = Position_worldspace, npos;
+	// v: v_i, nv: v_{i+1}
+	// v0 = n*dir
+	float n = texture(grad_n, (pos+vec3(1,1,1))*0.5).a;
 	vec3 dir = normalize(EyeDirection_worldspace);
-	vec3 npos;
+	vec3 v = n*dir, nv;
+	
 	float refIndexRatio;
 	float cnt = 0.00; // for debug
 	
     for (int i = 0; i < voxel_cnt; i++) {
+		// only focus on a cube
 		if (abs(pos.x) > 1 || abs(pos.y) > 1 || abs(pos.z) > 1) break;
-		if (texture(refractiveIndex, (pos+vec3(1,1,1))*0.5).r > 1.001) {
-			radiance += texture(radianceDistribution, (pos+vec3(1,1,1))*0.5).rgb;
-			cnt += 1.0/voxel_cnt;
-		}
-        npos = nextPos(pos, dir, 1.0/voxel_cnt);
-		refIndexRatio = texture(refractiveIndex, (pos+vec3(1,1,1))*0.5).r / texture(refractiveIndex, (npos+vec3(1,1,1))*0.5).r;
-		dir = refract(dir, normalize(pos-npos), refIndexRatio);
-		// For a given incident vector I, surface normal N and ratio of indices of refraction, eta, refract returns the refraction vector, R.
+		npos = pos + stepSize / n * v;
+		nv = v + stepSize * texture(grad_n, (pos+vec3(1,1,1))*0.5).rgb;
+		// sum up radiance
+		radiance += texture(radianceDistribution, (pos+vec3(1,1,1))*0.5).rgb;
+		
 		pos = npos;
+		v = nv;
     }
 	
     color = radiance;

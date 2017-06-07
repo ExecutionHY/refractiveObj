@@ -34,6 +34,7 @@ public:
     
 	// program_obj
 	GLuint uniformID_RefIndex;
+	GLuint uniformID_GradN;
 	GLuint uniformID_Radiance;
     GLuint uniformID_Camera;
 	GLuint uniformID_Vcnt;

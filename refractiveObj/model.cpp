@@ -205,7 +205,7 @@ bool Model::init() {
 	for (int i = 0; i < VOXEL_CNT; i++)
 		for (int j = 0; j < VOXEL_CNT; j++)
 			for (int k = 0; k < VOXEL_CNT; k++)
-				radiance[i][j][k] = vec4(0.01, 0.02, 0.02, 1);
+				radiance[i][j][k] = vec4(0.03, 0.06, 0.06, 1);
 	
 	
 	return true;
@@ -215,7 +215,7 @@ void Model::printData() {
 	for (int i = 0; i < VOXEL_CNT; i++)
 		for (int j = 0; j < VOXEL_CNT; j++)
 			for (int k = 0; k < VOXEL_CNT; k++)
-				printf("i: %2d, j: %2d, k: %2d, ri = %6f,  (%3f, %3f, %3f)\n", i, j, k, refIndex[i][j][k].x, radiance[i][j][k].x, radiance[i][j][k].y, radiance[i][j][k].z);
+				printf("i: %2d, j: %2d, k: %2d, ri = %6f,  (%3f, %3f, %3f)\n", i, j, k, grad_n[i][j][k].w, radiance[i][j][k].x, radiance[i][j][k].y, radiance[i][j][k].z);
 }
 #define _CRT_SECURE_NO_WARNINGS
 #define PROGRAM_FILE "voxelizer.cl"
@@ -245,8 +245,7 @@ int Model::voxelize_CL() {
 	
 	/* Data and buffers */
 	cl_int voxel_3 = VOXEL_CNT*VOXEL_CNT*VOXEL_CNT;
-	float* refIdx = (float*)malloc(sizeof(float)*voxel_3);
-	cl_mem indices_buff, vertices_buff, refIndex_buff, refIndexBlur_buff;
+	cl_mem indices_buff, vertices_buff, refIndex_buff, gradN_buff;
 	size_t work_units_per_kernel;
 	float refConst = 1.5f;
 	
@@ -332,8 +331,8 @@ int Model::voxelize_CL() {
 								   sizeof(vec3)*indexed_vertices.size(), &indexed_vertices[0], &err);
 	refIndex_buff = clCreateBuffer(context, CL_MEM_READ_WRITE,
 								   sizeof(float)*voxel_3, NULL, NULL);
-	refIndexBlur_buff = clCreateBuffer(context, CL_MEM_WRITE_ONLY,
-								   sizeof(float)*voxel_3, NULL, NULL);
+	gradN_buff = clCreateBuffer(context, CL_MEM_WRITE_ONLY,
+									   sizeof(vec4)*voxel_3, NULL, NULL);
 	
 	/* Create kernel arguments from the CL buffers */
 	err = clSetKernelArg(kernel, 0, sizeof(cl_mem), &indices_buff);
@@ -343,7 +342,7 @@ int Model::voxelize_CL() {
 	}
 	clSetKernelArg(kernel, 1, sizeof(cl_mem), &vertices_buff);
 	clSetKernelArg(kernel, 2, sizeof(cl_mem), &refIndex_buff);
-	clSetKernelArg(kernel, 3, sizeof(cl_mem), &refIndexBlur_buff);
+	clSetKernelArg(kernel, 3, sizeof(cl_mem), &gradN_buff);
 	int index_cnt = (int)indices.size(), voxel_cnt = VOXEL_CNT;
 	clSetKernelArg(kernel, 4, sizeof(cl_int), &index_cnt);
 	clSetKernelArg(kernel, 5, sizeof(cl_int), &voxel_cnt);
@@ -366,19 +365,13 @@ int Model::voxelize_CL() {
 	}
 	
 	/* Read the result */
-	err = clEnqueueReadBuffer(queue, refIndexBlur_buff, CL_TRUE, 0, sizeof(float)*voxel_3, refIdx, 0, NULL, NULL);
+	err = clEnqueueReadBuffer(queue, gradN_buff, CL_TRUE, 0, sizeof(vec4)*voxel_3, grad_n, 0, NULL, NULL);
 	if(err < 0) {
 		perror("Couldn't enqueue the read buffer command");
 		exit(1);
 	}
 	
-	/* Test the result */
-	for (int i = 0; i < voxel_3; i++) {
-		int x = i / (voxel_cnt * voxel_cnt);
-		int y = (i  % (voxel_cnt * voxel_cnt)) / voxel_cnt;
-		int z = i % voxel_cnt;
-		refIndex[x][y][z].x = refIdx[i];
-	}
+	
 	
 	/* Deallocate resources */
 	clReleaseMemObject(indices_buff);

@@ -23,8 +23,9 @@ extern string dir;
 #include <glm/gtx/intersect.hpp>
 using namespace glm;
 
-#define VOXEL_CNT 32
-extern vec4 refIndex[VOXEL_CNT][VOXEL_CNT][VOXEL_CNT];
+#define VOXEL_CNT 42
+extern float refIndex[VOXEL_CNT][VOXEL_CNT][VOXEL_CNT];
+extern vec4 grad_n[VOXEL_CNT][VOXEL_CNT][VOXEL_CNT];
 extern vec4 radiance[VOXEL_CNT][VOXEL_CNT][VOXEL_CNT];
 
 struct PackedVertex{

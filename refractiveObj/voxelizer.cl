@@ -83,10 +83,22 @@ float blur(__global float* refIndex, int x, int y, int z, int voxel_cnt) {
 	return res;
 }
 
+float3 grad(__global float4* grad_n, int x, int y, int z, int voxel_cnt) {
+	if (x == voxel_cnt || y == voxel_cnt || z == voxel_cnt)
+		return float3(0, 0, 0);
+	float voxel_width = 2.0f / voxel_cnt;
+	int index = x*voxel_cnt*voxel_cnt + y*voxel_cnt + z;
+	float3 res;
+	res.x = (grad_n[index+voxel_cnt*voxel_cnt].w - grad_n[index].w) / voxel_width;
+	res.y = (grad_n[index+voxel_cnt].w - grad_n[index].w) / voxel_width;
+	res.z = (grad_n[index+1].w - grad_n[index].w) / voxel_width;
+	return res;
+}
+
 __kernel void voxelize(__global ushort* indices,
 					   __global float3* indexed_vertices,
 					   __global float* refIndex,
-					   __global float* refIndex_blur,
+					   __global float4* grad_n,
 					   int index_cnt,
 					   int voxel_cnt,
 					   float refConst) {
@@ -107,12 +119,12 @@ __kernel void voxelize(__global ushort* indices,
 	if (isBorder(x, y, z, refIndex, voxel_cnt)) {
 		// super sample
 		refIndex[i] = 0;
-		float voxel_len = 2.0f / voxel_cnt;
+		float voxel_width = 2.0f / voxel_cnt;
 		
 		for (float a = -0.375; a <= 0.375; a += 0.25) {
 			for (float b = -0.375; b <= 0.375; b += 0.25) {
 				for (float c = -0.375; c <= 0.375; c += 0.25) {
-					float3 newPos = pos + float3(a, b, c)*voxel_len;
+					float3 newPos = pos + float3(a, b, c)*voxel_width;
 					int intersectCnt = 0;
 					for (int i = 0; i < index_cnt; i += 3) {
 						if (intersectRayTriangle(newPos, float3(1,0,0), indexed_vertices[indices[i]], indexed_vertices[indices[i+1]], indexed_vertices[indices[i+2]]))
@@ -126,6 +138,7 @@ __kernel void voxelize(__global ushort* indices,
 	}
 	
 	// Gaussian filter
-	refIndex_blur[i] = blur(refIndex, x, y, z, voxel_cnt);
+	grad_n[i].w = blur(refIndex, x, y, z, voxel_cnt);
+	grad_n[i].xyz = grad(grad_n, x, y, z, voxel_cnt);
 }
 
