@@ -246,8 +246,9 @@ int Model::voxelize_CL() {
 	/* Data and buffers */
 	cl_int voxel_3 = VOXEL_CNT*VOXEL_CNT*VOXEL_CNT;
 	float* refIdx = (float*)malloc(sizeof(float)*voxel_3);
-	cl_mem indices_buff, vertices_buff, refIndex_buff;
+	cl_mem indices_buff, vertices_buff, refIndex_buff, refIndexBlur_buff;
 	size_t work_units_per_kernel;
+	float refConst = 1.5f;
 	
 	/* Initialize data to be processed by the kernel */
 	
@@ -328,9 +329,11 @@ int Model::voxelize_CL() {
 		exit(1);
 	}
 	vertices_buff = clCreateBuffer(context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
-								  sizeof(vec3)*indexed_vertices.size(), &indexed_vertices[0], &err);
-	refIndex_buff = clCreateBuffer(context, CL_MEM_WRITE_ONLY,
-							  sizeof(float)*voxel_3, NULL, NULL);
+								   sizeof(vec3)*indexed_vertices.size(), &indexed_vertices[0], &err);
+	refIndex_buff = clCreateBuffer(context, CL_MEM_READ_WRITE,
+								   sizeof(float)*voxel_3, NULL, NULL);
+	refIndexBlur_buff = clCreateBuffer(context, CL_MEM_WRITE_ONLY,
+								   sizeof(float)*voxel_3, NULL, NULL);
 	
 	/* Create kernel arguments from the CL buffers */
 	err = clSetKernelArg(kernel, 0, sizeof(cl_mem), &indices_buff);
@@ -340,9 +343,11 @@ int Model::voxelize_CL() {
 	}
 	clSetKernelArg(kernel, 1, sizeof(cl_mem), &vertices_buff);
 	clSetKernelArg(kernel, 2, sizeof(cl_mem), &refIndex_buff);
+	clSetKernelArg(kernel, 3, sizeof(cl_mem), &refIndexBlur_buff);
 	int index_cnt = (int)indices.size(), voxel_cnt = VOXEL_CNT;
-	clSetKernelArg(kernel, 3, sizeof(cl_int), &index_cnt);
-	clSetKernelArg(kernel, 4, sizeof(cl_int), &voxel_cnt);
+	clSetKernelArg(kernel, 4, sizeof(cl_int), &index_cnt);
+	clSetKernelArg(kernel, 5, sizeof(cl_int), &voxel_cnt);
+	clSetKernelArg(kernel, 6, sizeof(cl_float), &refConst);
 	
 	/* Create a CL command queue for the device*/
 	queue = clCreateCommandQueue(context, device, 0, &err);
@@ -361,7 +366,7 @@ int Model::voxelize_CL() {
 	}
 	
 	/* Read the result */
-	err = clEnqueueReadBuffer(queue, refIndex_buff, CL_TRUE, 0, sizeof(float)*voxel_3, refIdx, 0, NULL, NULL);
+	err = clEnqueueReadBuffer(queue, refIndexBlur_buff, CL_TRUE, 0, sizeof(float)*voxel_3, refIdx, 0, NULL, NULL);
 	if(err < 0) {
 		perror("Couldn't enqueue the read buffer command");
 		exit(1);

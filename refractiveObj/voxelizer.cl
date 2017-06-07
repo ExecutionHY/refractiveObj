@@ -50,12 +50,46 @@ bool isBorder(int x, int y, int z, __global float* refIndex, int voxel_cnt) {
 	
 	return false;
 }
+__constant float blurWeight[] = {
+	0.01, 0.01, 0.01,
+	0.01, 0.01, 0.01,
+	0.01, 0.01, 0.01,
+	
+	0.01, 0.01, 0.01,
+	0.01, 0.74, 0.01,
+	0.01, 0.01, 0.01,
+	
+	0.01, 0.01, 0.01,
+	0.01, 0.01, 0.01,
+	0.01, 0.01, 0.01
+};
+
+float blur(__global float* refIndex, int x, int y, int z, int voxel_cnt) {
+	int index = x*voxel_cnt*voxel_cnt + y*voxel_cnt + z;
+	if (x == 0 || x == voxel_cnt ||
+		y == 0 || y == voxel_cnt ||
+		z == 0 || z == voxel_cnt)
+		return refIndex[index];
+	float res = 0;
+	for (int i = -1; i <= 1; i++) {
+		for (int j = -1; j <= 1; j++) {
+			for (int k = -1; k <= 1; k++) {
+				int idx = (x+i)*voxel_cnt*voxel_cnt + (y+j)*voxel_cnt + (z+k);
+				int widx = (i+1)*9 + (j+1)*3 + (k+1);
+				res += refIndex[idx] * blurWeight[widx];
+			}
+		}
+	}
+	return res;
+}
 
 __kernel void voxelize(__global ushort* indices,
 					   __global float3* indexed_vertices,
 					   __global float* refIndex,
+					   __global float* refIndex_blur,
 					   int index_cnt,
-					   int voxel_cnt) {
+					   int voxel_cnt,
+					   float refConst) {
 	
 	int i = get_global_id(0);
 	int x = i / (voxel_cnt * voxel_cnt);
@@ -63,11 +97,11 @@ __kernel void voxelize(__global ushort* indices,
 	int z = i % voxel_cnt;
 	int intersectCnt = 0;
 	float3 pos = float3((x-voxel_cnt/2.0)/(voxel_cnt/2.0), (y-voxel_cnt/2.0)/(voxel_cnt/2.0), (z-voxel_cnt/2.0)/(voxel_cnt/2.0));
-	for (int i = 0; i < voxel_cnt; i += 3) {
+	for (int i = 0; i < index_cnt; i += 3) {
 		if (intersectRayTriangle(pos, float3(1,0,0), indexed_vertices[indices[i]], indexed_vertices[indices[i+1]], indexed_vertices[indices[i+2]]))
 			intersectCnt++;
 	}
-	if (intersectCnt % 2 == 1) refIndex[i] = 1.5f;
+	if (intersectCnt % 2 == 1) refIndex[i] = refConst;
 	else refIndex[i] = 1.0f;
 	
 	if (isBorder(x, y, z, refIndex, voxel_cnt)) {
@@ -80,18 +114,18 @@ __kernel void voxelize(__global ushort* indices,
 				for (float c = -0.375; c <= 0.375; c += 0.25) {
 					float3 newPos = pos + float3(a, b, c)*voxel_len;
 					int intersectCnt = 0;
-					for (int i = 0; i < voxel_cnt; i += 3) {
+					for (int i = 0; i < index_cnt; i += 3) {
 						if (intersectRayTriangle(newPos, float3(1,0,0), indexed_vertices[indices[i]], indexed_vertices[indices[i+1]], indexed_vertices[indices[i+2]]))
 							intersectCnt++;
 					}
-					if (intersectCnt % 2 == 1) refIndex[i] += 1.5f/64;
+					if (intersectCnt % 2 == 1) refIndex[i] += refConst/64;
 					else refIndex[i] += 1.0f/64;
 				}
 			}
 		}
 	}
 	
-	// Gaussin filter
-
+	// Gaussian filter
+	refIndex_blur[i] = blur(refIndex, x, y, z, voxel_cnt);
 }
 

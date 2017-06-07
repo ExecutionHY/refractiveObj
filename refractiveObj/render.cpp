@@ -154,8 +154,11 @@ int Render::run() {
     
 	loadModel();
 	
+	float t1 = glfwGetTime();
 	m_object.init();
-	m_object.printData();
+	//m_object.printData();
+	
+	printf("Voxelization time = %6f s\n", glfwGetTime()-t1);
 	
 	GLuint texture_refIndex;
 	glGenTextures(1, &texture_refIndex);
