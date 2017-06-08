@@ -103,6 +103,8 @@ __kernel void voxelize(__global ushort* indices,
 					   int voxel_cnt,
 					   float refConst) {
 	
+	// part1 - get raw refractive index
+	
 	int i = get_global_id(0);
 	int x = i / (voxel_cnt * voxel_cnt);
 	int y = (i  % (voxel_cnt * voxel_cnt)) / voxel_cnt;
@@ -115,6 +117,10 @@ __kernel void voxelize(__global ushort* indices,
 	}
 	if (intersectCnt % 2 == 1) refIndex[i] = refConst;
 	else refIndex[i] = 1.0f;
+	
+	barrier(CLK_GLOBAL_MEM_FENCE);
+	
+	// part2 - super-sample those border voxels
 	
 	if (isBorder(x, y, z, refIndex, voxel_cnt)) {
 		// super sample
@@ -136,9 +142,16 @@ __kernel void voxelize(__global ushort* indices,
 			}
 		}
 	}
+	barrier(CLK_GLOBAL_MEM_FENCE);
+	
+	// part3 - blur the values
 	
 	// Gaussian filter
 	grad_n[i].w = blur(refIndex, x, y, z, voxel_cnt);
+	barrier(CLK_GLOBAL_MEM_FENCE);
+	
+	// part4 - compute gradiants
+	
 	grad_n[i].xyz = grad(grad_n, x, y, z, voxel_cnt);
 }
 
