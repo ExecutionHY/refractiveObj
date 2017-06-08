@@ -72,7 +72,7 @@ Render::~Render() {
     glfwTerminate();
     
 }
-void Render::loadModel() {
+void Render::loadModels() {
     // generate VAO
     glGenVertexArrays(1, &VertexArrayID);
     glBindVertexArray(VertexArrayID);
@@ -118,46 +118,9 @@ void Render::loadModel() {
     glGenBuffers(1, &elementbuffer_background);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, elementbuffer_background);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, m_object.indices.size() * sizeof(unsigned short), &m_background.indices[0] , GL_STATIC_DRAW);
-    
-}
-
-int Render::run() {
-    
-    // program for background
-    if (program_std.initShader( "standard.vert", "standard.frag", NULL ) == false) {
-        getchar();
-        exit(-1);
-    }
-    
-    // Get handles for our uniforms
-    program_std.uniformID_MVP = glGetUniformLocation(program_std.programID, "MVP");
-    program_std.uniformID_View = glGetUniformLocation(program_std.programID, "V");
-    program_std.uniformID_Model = glGetUniformLocation(program_std.programID, "M");
-    program_std.uniformID_Light = glGetUniformLocation(program_std.programID, "LightPosition_worldspace");
-    program_std.uniformID_Texture  = glGetUniformLocation(program_std.programID, "myTextureSampler");
-    
-    if (program_obj.initShader("object.vert", "object.frag", NULL) == false) {
-        getchar();
-        exit(-1);
-    }
-    program_obj.uniformID_MVP = glGetUniformLocation(program_obj.programID, "MVP");
-    program_obj.uniformID_View = glGetUniformLocation(program_obj.programID, "V");
-    program_obj.uniformID_Model = glGetUniformLocation(program_obj.programID, "M");
-	program_obj.uniformID_Camera = glGetUniformLocation(program_obj.programID, "CameraPos_worldspace");
-	program_obj.uniformID_Radiance = glGetUniformLocation(program_obj.programID, "radianceDistribution");
-	program_obj.uniformID_GradN = glGetUniformLocation(program_obj.programID, "grad_n");
-	program_obj.uniformID_CubeMap = glGetUniformLocation(program_obj.programID, "CubeMap");
-	program_obj.uniformID_Vcnt = glGetUniformLocation(program_obj.programID, "voxel_cnt");
 	
-	if (program_sky.initShader("skybox.vert", "skybox.frag", NULL) == false) {
-		getchar();
-		exit(-1);
-	}
-	program_sky.uniformID_Projection = glGetUniformLocation(program_sky.programID, "P");
-	program_sky.uniformID_View = glGetUniformLocation(program_sky.programID, "V");
-	program_sky.uniformID_CubeMap = glGetUniformLocation(program_sky.programID, "CubeMap");
+	// skybox
 	
-	texture_skybox.loadCubeMap("sky");
 	float points[] = {
 		-10.0f,  10.0f, -10.0f,
 		-10.0f, -10.0f, -10.0f,
@@ -165,35 +128,35 @@ int Render::run() {
 		10.0f, -10.0f, -10.0f,
 		10.0f,  10.0f, -10.0f,
 		-10.0f,  10.0f, -10.0f,
-
+		
 		-10.0f, -10.0f,  10.0f,
 		-10.0f, -10.0f, -10.0f,
 		-10.0f,  10.0f, -10.0f,
 		-10.0f,  10.0f, -10.0f,
 		-10.0f,  10.0f,  10.0f,
 		-10.0f, -10.0f,  10.0f,
-
+		
 		10.0f, -10.0f, -10.0f,
 		10.0f, -10.0f,  10.0f,
 		10.0f,  10.0f,  10.0f,
 		10.0f,  10.0f,  10.0f,
 		10.0f,  10.0f, -10.0f,
 		10.0f, -10.0f, -10.0f,
-
+		
 		-10.0f, -10.0f,  10.0f,
 		-10.0f,  10.0f,  10.0f,
 		10.0f,  10.0f,  10.0f,
 		10.0f,  10.0f,  10.0f,
 		10.0f, -10.0f,  10.0f,
 		-10.0f, -10.0f,  10.0f,
-
+		
 		-10.0f,  10.0f, -10.0f,
 		10.0f,  10.0f, -10.0f,
 		10.0f,  10.0f,  10.0f,
 		10.0f,  10.0f,  10.0f,
 		-10.0f,  10.0f,  10.0f,
 		-10.0f,  10.0f, -10.0f,
-
+		
 		-10.0f, -10.0f, -10.0f,
 		-10.0f, -10.0f,  10.0f,
 		10.0f, -10.0f, -10.0f,
@@ -205,24 +168,68 @@ int Render::run() {
 	glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer_skybox);
 	glBufferData(GL_ARRAY_BUFFER, 3 * 36 * sizeof(float), &points, GL_STATIC_DRAW);
 	
+}
+
+void Render::loadPrograms() {
+	// program for background
+	if (program_std.initShader( "standard.vert", "standard.frag", NULL ) == false) {
+		getchar();
+		exit(-1);
+	}
+	
+	// Get handles for our uniforms
+	program_std.uniformID_MVP = glGetUniformLocation(program_std.programID, "MVP");
+	program_std.uniformID_View = glGetUniformLocation(program_std.programID, "V");
+	program_std.uniformID_Model = glGetUniformLocation(program_std.programID, "M");
+	program_std.uniformID_Light = glGetUniformLocation(program_std.programID, "LightPosition_worldspace");
+	program_std.uniformID_Texture  = glGetUniformLocation(program_std.programID, "myTextureSampler");
+	
+	// program for object
+	if (program_obj.initShader("object.vert", "object.frag", NULL) == false) {
+		getchar();
+		exit(-1);
+	}
+	program_obj.uniformID_MVP = glGetUniformLocation(program_obj.programID, "MVP");
+	program_obj.uniformID_View = glGetUniformLocation(program_obj.programID, "V");
+	program_obj.uniformID_Model = glGetUniformLocation(program_obj.programID, "M");
+	program_obj.uniformID_Camera = glGetUniformLocation(program_obj.programID, "CameraPos_worldspace");
+	program_obj.uniformID_Radiance = glGetUniformLocation(program_obj.programID, "radianceDistribution");
+	program_obj.uniformID_GradN = glGetUniformLocation(program_obj.programID, "grad_n");
+	program_obj.uniformID_CubeMap = glGetUniformLocation(program_obj.programID, "CubeMap");
+	program_obj.uniformID_Vcnt = glGetUniformLocation(program_obj.programID, "voxel_cnt");
+	
+	// program for skybox
+	if (program_sky.initShader("skybox.vert", "skybox.frag", NULL) == false) {
+		getchar();
+		exit(-1);
+	}
+	program_sky.uniformID_Projection = glGetUniformLocation(program_sky.programID, "P");
+	program_sky.uniformID_View = glGetUniformLocation(program_sky.programID, "V");
+	program_sky.uniformID_CubeMap = glGetUniformLocation(program_sky.programID, "CubeMap");
+}
+
+int Render::run() {
 	
 	
-	
+	// init controller
     controller.init(window);
+	
+	// init programs
+	loadPrograms();
+	
+	// init models
+	loadModels();
+	
+	// init textures
     bgTexture.loadBMP("background.bmp");
-    text2d.init("Holstein.DDS");
-    
-	loadModel();
-	
-		
-	
-	
+	text2d.init("Holstein.DDS");
+	texture_skybox.loadCubeMap("river");
 	
 	
 	
 	float t1 = glfwGetTime();
 	m_object.init();
-	m_object.printData();
+	//m_object.printData();
 	
 	printf("Voxelization time = %6f s\n", glfwGetTime()-t1);
 	

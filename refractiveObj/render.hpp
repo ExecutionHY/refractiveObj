@@ -47,11 +47,13 @@ private:
 	
     Model m_object;
     Model m_background;
-    void loadModel();
+    void loadModels();
 
     Texture bgTexture;
 	Texture texture_skybox;
     Text2D text2d;
+	
+	void loadPrograms();
 
 public:
     Render();

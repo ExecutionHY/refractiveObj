@@ -9,7 +9,7 @@
 #ifndef model_hpp
 #define model_hpp
 
-#include <stdio.h>
+#include <cstdio>
 #include <vector>
 #include <map>
 #include <cstdlib>
@@ -23,7 +23,7 @@ extern string dir;
 #include <glm/gtx/intersect.hpp>
 using namespace glm;
 
-#define VOXEL_CNT 32
+#define VOXEL_CNT 8
 extern float refIndex[VOXEL_CNT][VOXEL_CNT][VOXEL_CNT];
 extern vec4 grad_n[VOXEL_CNT][VOXEL_CNT][VOXEL_CNT];
 extern vec4 radiance[VOXEL_CNT][VOXEL_CNT][VOXEL_CNT];
@@ -45,21 +45,21 @@ private:
                  std::vector<glm::vec3> & out_normals
                  );
     bool getSimilarVertexIndex_fast(
-                                           PackedVertex & packed,
-                                           std::map<PackedVertex,unsigned short> & VertexToOutIndex,
-                                           unsigned short & result
-                                    );
+		PackedVertex & packed,
+		std::map<PackedVertex,unsigned short> & VertexToOutIndex,
+		unsigned short & result
+	);
     void indexVBO(
-                         std::vector<glm::vec3> & in_vertices,
-                         std::vector<glm::vec2> & in_uvs,
-                         std::vector<glm::vec3> & in_normals,
-                         
-                         std::vector<unsigned short> & out_indices,
-                         std::vector<glm::vec3> & out_vertices,
-                         std::vector<glm::vec2> & out_uvs,
-                         std::vector<glm::vec3> & out_normals
-                  );
-	bool inside(float x, float y, float z);
+		std::vector<glm::vec3> & in_vertices,
+		std::vector<glm::vec2> & in_uvs,
+		std::vector<glm::vec3> & in_normals,
+
+		std::vector<unsigned short> & out_indices,
+		std::vector<glm::vec3> & out_vertices,
+		std::vector<glm::vec2> & out_uvs,
+		std::vector<glm::vec3> & out_normals
+	);
+
 public:
     Model();
     ~Model();
