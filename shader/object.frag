@@ -10,6 +10,7 @@ out vec3 color;
 // Values that stay constant for the whole mesh.
 uniform sampler3D radianceDistribution;
 uniform sampler3D grad_n;
+uniform samplerCube CubeMap;
 uniform int voxel_cnt;
 
 vec3 dirRemain = vec3(0, 0, 0);
@@ -62,16 +63,20 @@ void main(){
 	
     for (int i = 0; i < voxel_cnt; i++) {
 		// only focus on a cube
-		if (abs(pos.x) > 1 || abs(pos.y) > 1 || abs(pos.z) > 1) break;
+		if (abs(pos.x) >= 1 || abs(pos.y) >= 1 || abs(pos.z) >= 1) break;
 		npos = pos + stepSize / n * v;
 		nv = v + stepSize * texture(grad_n, (pos+vec3(1,1,1))*0.5).rgb;
 		// sum up radiance
-		radiance += texture(radianceDistribution, (pos+vec3(1,1,1))*0.5).rgb;
+		//radiance += texture(radianceDistribution, (pos+vec3(1,1,1))*0.5).rgb;
 		
 		pos = npos;
 		v = nv;
+		
+		cnt += 0.02;
     }
 	
-    color = radiance;
+	
+	// direction * 10
+	color = vec3(cnt, 0, 0);//texture(CubeMap, normalize(v)*10.0f).rgb;
     
 }

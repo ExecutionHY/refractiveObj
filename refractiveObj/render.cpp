@@ -61,8 +61,10 @@ Render::~Render() {
     glDeleteBuffers(1, &vertexbuffer_background);
     glDeleteBuffers(1, &uvbuffer_background);
     glDeleteBuffers(1, &normalbuffer_background);
-    glDeleteBuffers(1, &elementbuffer_background);
-    
+	glDeleteBuffers(1, &elementbuffer_background);
+	
+	glDeleteBuffers(1, &vertexbuffer_skybox);
+	
     // Clean up VAO
     glDeleteVertexArrays(1, &VertexArrayID);
     
@@ -144,7 +146,65 @@ int Render::run() {
 	program_obj.uniformID_Camera = glGetUniformLocation(program_obj.programID, "CameraPos_worldspace");
 	program_obj.uniformID_Radiance = glGetUniformLocation(program_obj.programID, "radianceDistribution");
 	program_obj.uniformID_GradN = glGetUniformLocation(program_obj.programID, "grad_n");
+	program_obj.uniformID_CubeMap = glGetUniformLocation(program_obj.programID, "CubeMap");
 	program_obj.uniformID_Vcnt = glGetUniformLocation(program_obj.programID, "voxel_cnt");
+	
+	if (program_sky.initShader("skybox.vert", "skybox.frag", NULL) == false) {
+		getchar();
+		exit(-1);
+	}
+	program_sky.uniformID_Projection = glGetUniformLocation(program_sky.programID, "P");
+	program_sky.uniformID_View = glGetUniformLocation(program_sky.programID, "V");
+	program_sky.uniformID_CubeMap = glGetUniformLocation(program_sky.programID, "CubeMap");
+	
+	texture_skybox.loadCubeMap("sky");
+	float points[] = {
+		-10.0f,  10.0f, -10.0f,
+		-10.0f, -10.0f, -10.0f,
+		10.0f, -10.0f, -10.0f,
+		10.0f, -10.0f, -10.0f,
+		10.0f,  10.0f, -10.0f,
+		-10.0f,  10.0f, -10.0f,
+
+		-10.0f, -10.0f,  10.0f,
+		-10.0f, -10.0f, -10.0f,
+		-10.0f,  10.0f, -10.0f,
+		-10.0f,  10.0f, -10.0f,
+		-10.0f,  10.0f,  10.0f,
+		-10.0f, -10.0f,  10.0f,
+
+		10.0f, -10.0f, -10.0f,
+		10.0f, -10.0f,  10.0f,
+		10.0f,  10.0f,  10.0f,
+		10.0f,  10.0f,  10.0f,
+		10.0f,  10.0f, -10.0f,
+		10.0f, -10.0f, -10.0f,
+
+		-10.0f, -10.0f,  10.0f,
+		-10.0f,  10.0f,  10.0f,
+		10.0f,  10.0f,  10.0f,
+		10.0f,  10.0f,  10.0f,
+		10.0f, -10.0f,  10.0f,
+		-10.0f, -10.0f,  10.0f,
+
+		-10.0f,  10.0f, -10.0f,
+		10.0f,  10.0f, -10.0f,
+		10.0f,  10.0f,  10.0f,
+		10.0f,  10.0f,  10.0f,
+		-10.0f,  10.0f,  10.0f,
+		-10.0f,  10.0f, -10.0f,
+
+		-10.0f, -10.0f, -10.0f,
+		-10.0f, -10.0f,  10.0f,
+		10.0f, -10.0f, -10.0f,
+		10.0f, -10.0f, -10.0f,
+		-10.0f, -10.0f,  10.0f,
+		10.0f, -10.0f,  10.0f
+	};
+	glGenBuffers(1, &vertexbuffer_skybox);
+	glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer_skybox);
+	glBufferData(GL_ARRAY_BUFFER, 3 * 36 * sizeof(float), &points, GL_STATIC_DRAW);
+	
 	
 	
 	
@@ -154,9 +214,15 @@ int Render::run() {
     
 	loadModel();
 	
+		
+	
+	
+	
+	
+	
 	float t1 = glfwGetTime();
 	m_object.init();
-	//m_object.printData();
+	m_object.printData();
 	
 	printf("Voxelization time = %6f s\n", glfwGetTime()-t1);
 	
@@ -190,6 +256,24 @@ int Render::run() {
     
         glUniform3f(program_std.uniformID_Light, controller.lightPos.x, controller.lightPos.y, controller.lightPos.z);
 
+		
+		// Draw skybox
+		glUseProgram(program_sky.programID);
+		
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_CUBE_MAP, texture_skybox.textureID);
+		glUniform1i(program_sky.uniformID_CubeMap, 0);
+		glUniformMatrix4fv(program_sky.uniformID_View, 1, GL_FALSE, &controller.View[0][0]);
+		glUniformMatrix4fv(program_sky.uniformID_Projection, 1, GL_FALSE, &controller.Projection[0][0]);
+		
+		glEnableVertexAttribArray(0);
+		glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer_skybox);
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
+		
+		glDrawArrays(GL_TRIANGLES, 0, 36);
+		
+		
+		
         // Draw m_object
         
         // Use our shader
@@ -200,13 +284,18 @@ int Render::run() {
         glUniformMatrix4fv(program_obj.uniformID_Model, 1, GL_FALSE, &controller.Model_object[0][0]);
         glUniformMatrix4fv(program_obj.uniformID_MVP, 1, GL_FALSE, &controller.MVP_object[0][0]);
 		glUniform3f(program_obj.uniformID_Camera, controller.camera.x, controller.camera.y, controller.camera.z);
+		glUniform1i(program_obj.uniformID_Vcnt, VOXEL_CNT);
+		
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_3D, texture_gradN);
 		glUniform1i(program_obj.uniformID_GradN, 0);
 		glActiveTexture(GL_TEXTURE1);
 		glBindTexture(GL_TEXTURE_3D, texture_radiance);
 		glUniform1i(program_obj.uniformID_Radiance, 1);
-		glUniform1i(program_obj.uniformID_Vcnt, VOXEL_CNT);
+		glActiveTexture(GL_TEXTURE2);
+		glBindTexture(GL_TEXTURE_CUBE_MAP, texture_skybox.textureID);
+		glUniform1i(program_obj.uniformID_CubeMap, 2);
+		
 		
         // attribute buffer
         glEnableVertexAttribArray(0);
@@ -226,7 +315,9 @@ int Render::run() {
         glDisableVertexAttribArray(0);
         glDisableVertexAttribArray(1);
         glDisableVertexAttribArray(2);
-        
+		
+		/*
+		
         // Draw m_background
         
         // Use our shader
@@ -258,7 +349,7 @@ int Render::run() {
         glDisableVertexAttribArray(1);
         glDisableVertexAttribArray(2);
 		
-		
+		*/
 		
         char text[256];
         sprintf(text,"fps: %.2f, time: %.2f s", controller.fps, glfwGetTime());

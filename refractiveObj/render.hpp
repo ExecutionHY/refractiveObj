@@ -29,6 +29,7 @@ private:
     GLFWwindow *window;
     GLSLProgram program_std;
     GLSLProgram program_obj;
+	GLSLProgram program_sky;
     Controller controller;
     
     GLuint VertexArrayID;
@@ -42,11 +43,14 @@ private:
     GLuint normalbuffer_background;
     GLuint elementbuffer_background;
 
+	GLuint vertexbuffer_skybox;
+	
     Model m_object;
     Model m_background;
     void loadModel();
 
     Texture bgTexture;
+	Texture texture_skybox;
     Text2D text2d;
 
 public:

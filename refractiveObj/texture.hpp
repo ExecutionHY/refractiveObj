@@ -26,6 +26,8 @@ public:
     ~Texture();
     void loadBMP(const char * imagepath);
     void loadDDS(const char * imagepath);
+	
+	void loadCubeMap(const char * mapname);
     
     GLuint textureID;
 };

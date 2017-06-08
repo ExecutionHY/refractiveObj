@@ -38,6 +38,10 @@ public:
 	GLuint uniformID_Radiance;
     GLuint uniformID_Camera;
 	GLuint uniformID_Vcnt;
+	
+	// program_sky
+	GLuint uniformID_Projection;
+	GLuint uniformID_CubeMap;
     
     GLSLProgram();
     ~GLSLProgram();
