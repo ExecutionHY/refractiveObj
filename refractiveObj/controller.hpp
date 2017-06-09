@@ -9,12 +9,7 @@
 #ifndef controller_hpp
 #define controller_hpp
 
-#include <stdio.h>
-#include <GL/glew.h>
-#include <glm/glm.hpp>
-using namespace glm;
-#include <glm/gtc/matrix_transform.hpp>
-#include <GLFW/glfw3.h>
+#include "main.hpp"
 
 class Controller {
 private:

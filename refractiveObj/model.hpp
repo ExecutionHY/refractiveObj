@@ -9,29 +9,12 @@
 #ifndef model_hpp
 #define model_hpp
 
-#include <cstdio>
-#include <vector>
-#include <map>
-#include <cstdlib>
-#include <string>
-using namespace std;
-
-extern string dir;
-
-#include <GL/glew.h>
-#include <glm/glm.hpp>
-#include <glm/gtx/intersect.hpp>
-using namespace glm;
-
-#define VOXEL_CNT 8
-extern float refIndex[VOXEL_CNT][VOXEL_CNT][VOXEL_CNT];
-extern vec4 grad_n[VOXEL_CNT][VOXEL_CNT][VOXEL_CNT];
-extern vec4 radiance[VOXEL_CNT][VOXEL_CNT][VOXEL_CNT];
+#include "main.hpp"
 
 struct PackedVertex{
-    glm::vec3 position;
-    glm::vec2 uv;
-    glm::vec3 normal;
+    vec3 position;
+    vec2 uv;
+    vec3 normal;
     bool operator<(const PackedVertex that) const{
         return memcmp((void*)this, (void*)&that, sizeof(PackedVertex))>0;
     };
@@ -40,24 +23,24 @@ struct PackedVertex{
 class Model {
 private:
     bool loadOBJ(const char * path,
-                 std::vector<glm::vec3> & out_vertices,
-                 std::vector<glm::vec2> & out_uvs,
-                 std::vector<glm::vec3> & out_normals
+                 vector<vec3> & out_vertices,
+                 vector<vec2> & out_uvs,
+                 vector<vec3> & out_normals
                  );
     bool getSimilarVertexIndex_fast(
 		PackedVertex & packed,
-		std::map<PackedVertex,unsigned short> & VertexToOutIndex,
+		map<PackedVertex,unsigned short> & VertexToOutIndex,
 		unsigned short & result
 	);
     void indexVBO(
-		std::vector<glm::vec3> & in_vertices,
-		std::vector<glm::vec2> & in_uvs,
-		std::vector<glm::vec3> & in_normals,
+		vector<vec3> & in_vertices,
+		vector<vec2> & in_uvs,
+		vector<vec3> & in_normals,
 
-		std::vector<unsigned short> & out_indices,
-		std::vector<glm::vec3> & out_vertices,
-		std::vector<glm::vec2> & out_uvs,
-		std::vector<glm::vec3> & out_normals
+		vector<unsigned short> & out_indices,
+		vector<vec3> & out_vertices,
+		vector<vec2> & out_uvs,
+		vector<vec3> & out_normals
 	);
 
 public:
@@ -68,9 +51,6 @@ public:
     vector<vec2> indexed_uvs;
     vector<vec3> indexed_normals;
     void init(const char *path);
-	bool init();
-	void printData();
-	int voxelize_CL();
 };
 
 #endif /* model_hpp */

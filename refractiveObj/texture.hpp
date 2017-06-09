@@ -9,13 +9,7 @@
 #ifndef texture_hpp
 #define texture_hpp
 
-#include <stdio.h>
-#include <cstdlib>
-#include <string>
-using namespace std;
-
-#include <GL/glew.h>
-#include <GLFW/glfw3.h>
+#include "main.hpp"
 
 extern string dir;
 
@@ -28,7 +22,8 @@ public:
     void loadDDS(const char * imagepath);
 	
 	void loadCubeMap(const char * mapname);
-    
+	void load3DArray(vec4 arr[VOXEL_CNT][VOXEL_CNT][VOXEL_CNT]);
+	
     GLuint textureID;
 };
 

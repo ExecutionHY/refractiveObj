@@ -295,3 +295,14 @@ void Texture::loadCubeMap(const char * mapname){
 	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_GENERATE_MIPMAP, GL_TRUE);
 }
+
+void Texture::load3DArray(vec4 arr[VOXEL_CNT][VOXEL_CNT][VOXEL_CNT]) {
+	glGenTextures(1, &textureID);
+	glBindTexture(GL_TEXTURE_3D, textureID);
+	glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_R, GL_REPEAT);
+	glTexImage3D(GL_TEXTURE_3D, 0, GL_RGBA, VOXEL_CNT, VOXEL_CNT, VOXEL_CNT, 0, GL_RGBA, GL_FLOAT, arr);
+}

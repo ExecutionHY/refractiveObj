@@ -9,29 +9,40 @@
 #ifndef render_hpp
 #define render_hpp
 
-#include <stdio.h>
-#include <GL/glew.h>
-#include <GLFW/glfw3.h>
-#include <glm/glm.hpp>
-using namespace glm;
-#include <glm/gtc/matrix_transform.hpp>
-
+#include "main.hpp"
 #include "glslprogram.hpp"
 #include "model.hpp"
 #include "controller.hpp"
 #include "texture.hpp"
 #include "text2D.hpp"
-
-extern string dir;
+#include "voxelizer.hpp"
+#include "photonmanager.hpp"
 
 class Render {
 private:
     GLFWwindow *window;
-    GLSLProgram program_std;
-    GLSLProgram program_obj;
+	Controller controller;
+	
+	GLSLProgram program_std;
+	GLSLProgram program_obj;
 	GLSLProgram program_sky;
-    Controller controller;
-    
+	GLSLProgram program_photon;	// photon map
+	void loadPrograms();
+	
+	Model m_object;
+	Model m_background;
+	void loadModels();
+	
+	Texture bgTexture;
+	Texture texture_skybox;
+	Texture texture_gradN;
+	Texture texture_radiance;
+	
+	Text2D text2d;
+	
+	Voxelizer voxelizer;
+	PhotonManager photonManager;
+	
     GLuint VertexArrayID;
     GLuint vertexbuffer_object;
     GLuint uvbuffer_object;
@@ -45,15 +56,6 @@ private:
 
 	GLuint vertexbuffer_skybox;
 	
-    Model m_object;
-    Model m_background;
-    void loadModels();
-
-    Texture bgTexture;
-	Texture texture_skybox;
-    Text2D text2d;
-	
-	void loadPrograms();
 
 public:
     Render();

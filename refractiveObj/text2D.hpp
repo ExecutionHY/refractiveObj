@@ -9,14 +9,7 @@
 #ifndef text2D_hpp
 #define text2D_hpp
 
-#include <stdio.h>
-#include <vector>
-using namespace std;
-
-#include <GL/glew.h>
-#include <glm/glm.hpp>
-using namespace glm;
-
+#include "main.hpp"
 #include "texture.hpp"
 #include "glslprogram.hpp"
 

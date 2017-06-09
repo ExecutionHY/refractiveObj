@@ -80,6 +80,6 @@ void main(){
     //color = radiance;
 	
 	// direction * 10
-	color = texture(CubeMap, normalize(v)*10.0f).rgb;
+	color = texture(CubeMap, pos+normalize(v)*10.0f).rgb;
 	//color = vec3(texture(grad_n, (pos+vec3(1,1,1))*0.5).a/2, 0, 0);
 }

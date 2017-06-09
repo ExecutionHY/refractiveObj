@@ -8,11 +8,16 @@
 
 #include <iostream>
 #include "render.hpp"
+#include "main.hpp"
 
-string dir = "/Users/mac/Codes/refractiveObj/";
+
+int FRAME_WIDTH = 800;
+int FRAME_HEIGHT = 600;
+
 vec4 grad_n[VOXEL_CNT][VOXEL_CNT][VOXEL_CNT];
 vec4 radiance[VOXEL_CNT][VOXEL_CNT][VOXEL_CNT];
 
+string dir = "/Users/mac/Codes/refractiveObj/";
 
 int main(int argc, const char * argv[]) {
     

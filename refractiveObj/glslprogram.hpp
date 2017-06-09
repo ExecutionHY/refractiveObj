@@ -9,15 +9,7 @@
 #ifndef glslprogram_hpp
 #define glslprogram_hpp
 
-#include <stdio.h>
-#include <GL/glew.h>
-#include <string>
-#include <cstdlib>
-#include <fstream>
-#include <vector>
-using namespace std;
-
-extern string dir;
+#include "main.hpp"
 
 class GLSLProgram {
 private:
@@ -42,7 +34,10 @@ public:
 	// program_sky
 	GLuint uniformID_Projection;
 	GLuint uniformID_CubeMap;
-    
+	
+	// program_photon
+	GLuint uniformID_LightMVP;
+	
     GLSLProgram();
     ~GLSLProgram();
     bool initShader(const char * vertex_file_path,const char * fragment_file_path, const char * geometry_file_path);

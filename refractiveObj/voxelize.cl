@@ -84,7 +84,7 @@ float blur(__global float* refIndex, int x, int y, int z, int voxel_cnt) {
 }
 
 float3 grad(__global float4* grad_n, int x, int y, int z, int voxel_cnt) {
-	if (x == voxel_cnt || y == voxel_cnt || z == voxel_cnt)
+	if (x == voxel_cnt-1 || y == voxel_cnt-1 || z == voxel_cnt-1)
 		return float3(0, 0, 0);
 	float voxel_width = 2.0f / voxel_cnt;
 	int index = x*voxel_cnt*voxel_cnt + y*voxel_cnt + z;
@@ -121,8 +121,8 @@ __kernel void voxelize(__global ushort* indices,
 	barrier(CLK_GLOBAL_MEM_FENCE);
 	
 	// part2 - super-sample those border voxels
-	
-	if (isBorder(x, y, z, refIndex, voxel_cnt)) {
+	bool isborder = isBorder(x, y, z, refIndex, voxel_cnt);
+	if (isborder) {
 		// super sample
 		refIndex[i] = 0;
 		float voxel_width = 2.0f / voxel_cnt;
@@ -147,7 +147,8 @@ __kernel void voxelize(__global ushort* indices,
 	// part3 - blur the values
 	
 	// Gaussian filter
-	grad_n[i].w = blur(refIndex, x, y, z, voxel_cnt);
+	if (isborder) grad_n[i].w = blur(refIndex, x, y, z, voxel_cnt);
+	else grad_n[i].w = refIndex[i];
 	barrier(CLK_GLOBAL_MEM_FENCE);
 	
 	// part4 - compute gradiants

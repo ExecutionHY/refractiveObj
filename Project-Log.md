@@ -57,9 +57,9 @@ May 29
 
 May 30
 
-把 Controlle r进行了修改，分离出object的Model，可以旋转等。
+把 Controller 进行了修改，分离出 object 的 Model，可以旋转等。
 
-增加了右键旋转 object 的功能。增加了zoom out/in的功能，zx两个键控制。
+增加了右键旋转 object 的功能。增加了zoom out/in 的功能，z/x 两个键控制。
 
 ## 0.7 text2D
 
@@ -67,19 +67,19 @@ May 30
 
 增加了一个 text2D 类，可以显示文字
 
-修改了一些类成员的关系，对于一个 program，uniform 的句柄全都保存在program类里面
+修改了一些类成员的关系，对于一个 program，uniform 的句柄全都保存在 program 类里面
 
 下一步事项：
 
-- 开始写shader代码，试着导入Texture3D，color由radiance累加获得
+- 开始写 shader 代码，试着导入 Texture3D，color 由 radiance 累加获得
 
 ## 1.0 3d Texture
 
 May 30
 
-object用一个新的shader来绘制，颜色由一个3d texture决定。目前遇到的问题是，这个radiance的三位数组可能很有限，无法获得很高的精度。
+object 用一个新的 shader 来绘制，颜色由一个 3d texture 决定。目前遇到的问题是，这个 radiance 的三位数组可能很有限，无法获得很高的精度。
 
-注意在shader中取值的时候，uv的范围应该在0-1之间。
+注意在 shader 中取值的时候，uv的范围应该在 0-1 之间。
 
 ## 1.1 voxelizer
 
@@ -87,7 +87,7 @@ Jun 5
 
 数学资料 [http://geomalgorithms.com/a06-_intersect-2.html](http://geomalgorithms.com/a06-_intersect-2.html)
 
-把网格数据保存到一个3D数组中，有个好用的函数 intersectRayTriangle ，其他类似的相交函数也在 glm/gtx/intersect 中。
+把网格数据保存到一个 3D 数组中，有个好用的函数 intersectRayTriangle ，其他类似的相交函数也在 glm/gtx/intersect 中。
 
 一些默认设定：
 
@@ -187,5 +187,38 @@ Jun 8
 
 ![1-1](./project-log-img/1-8.png)
 
-## 1.9
+## 1.9 GL_Texture to CL_Mem
 
+Jun 9
+
+一些代码的修改：
+
+- voxelizer 部分独立成类
+- 把 3D array -> texture 的部分封装成了 Texture 类成员函数
+- 新建了 main.hpp 来保存一些宏、头文件等
+- 新建了一个 ball.obj 来更好地观察折射效果（这个球也太不光滑了点）
+
+![1-9](./project-log-img/1-9.png)
+
+本次任务：
+
+按照 shadowmap 的方法生成一个 photon list，用 OpenCL 代码调用这个 texture 
+
+测试：
+
+用 OpenCL 的函数 clCreateFromGLTexture ，把 texture 转变成 cl_mem 类型，再在 kernel 中使用。
+
+写一个简单的 kernel，把 texture 的内容输出显示。
+
+#### 遇到了困难
+
+上述函数一直调用失败。
+
+- 经过大量查阅资料后，在一篇 SIGGRAPH ASIA 09 的文章《GL-interop》里面看到了关于 CL/GL 交互的详细代码，需要特殊的 context、share group、acquire resource 等操作才可以使用这个 cl_mem。
+- 然而，之后还是报另一个错，SetArg 失败。又经过大量查阅 stack overflow 之后，终于在一个人的问题中看到了答案，原来生成的 cl_mem 不是我想的那种二维数组 float4 （仔细想想 CL 也不能使用二维数组啊），而是 image2d_t 类型的。必须用这个类型作为 kernel 的参数。
+- 然后，显示的数组内容依然不是我想要的 0 1 数组。看了半天，发现自己把float 类型用 %d 输出了，难怪。
+- 最后，显示的数组内容均为 0 。看来是 texture 渲染的时候没有生成好吧。需要一个 debug 窗口。
+
+#### 小结
+
+做了一整天就光研究这么一个函数了，想来为什么会花费掉这么多时间呢。重点还是因为对这个平台不熟悉。这种情况下，只能看 document 边试边写。但是尝试是有限度的，必须要依靠一些 example code。
