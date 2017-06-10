@@ -34,8 +34,8 @@ public:
     mat4 View;
     mat4 Model_object;
     mat4 MVP_object;
-    mat4 Model_background;
-    mat4 MVP_background;
+    mat4 Model_table;
+    mat4 MVP_table;
     
     vec3 camera;
     vec3 lightPos;

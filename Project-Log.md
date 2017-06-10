@@ -222,3 +222,20 @@ Jun 9
 #### 小结
 
 做了一整天就光研究这么一个函数了，想来为什么会花费掉这么多时间呢。重点还是因为对这个平台不熟悉。这种情况下，只能看 document 边试边写。但是尝试是有限度的，必须要依靠一些 example code。
+
+## 1.10 photon map
+
+Jun 10
+
+增加了一张小桌子（平面），我利用它来观察 depthTexture 的情况。
+
+最后把 depthTexture 的部分改回原来那个样子就好了。
+
+时间测试：photon map 的渲染 + cl_kernel 运行 < 0.1 s
+
+不错的一个结果。
+
+下一步工作：
+
+将 photon map 的3D空间位置找到，然后对这些光子进行简单的 march ，修改radiance 。
+

@@ -30,13 +30,15 @@ private:
 	void loadPrograms();
 	
 	Model m_object;
-	Model m_background;
+	Model m_table;
 	void loadModels();
 	
 	Texture bgTexture;
 	Texture texture_skybox;
 	Texture texture_gradN;
 	Texture texture_radiance;
+	GLuint frameBuffer_photon;
+	Texture texture_photon;
 	
 	Text2D text2d;
 	
@@ -49,10 +51,10 @@ private:
     GLuint normalbuffer_object;
     GLuint elementbuffer_object;
     
-    GLuint vertexbuffer_background;
-    GLuint uvbuffer_background;
-    GLuint normalbuffer_background;
-    GLuint elementbuffer_background;
+    GLuint vertexbuffer_table;
+    GLuint uvbuffer_table;
+    GLuint normalbuffer_table;
+    GLuint elementbuffer_table;
 
 	GLuint vertexbuffer_skybox;
 	

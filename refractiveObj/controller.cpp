@@ -37,8 +37,8 @@ void Controller::init(GLFWwindow *window) {
     View = lookAt(direction*(-1.0f)*dist, vec3(0,0,0), vec3(0,1,0));
     Model_object = mat4(1.0f);
     MVP_object = Projection * View * Model_object;
-    Model_background = mat4(1.0f);
-    MVP_background = Projection * View * Model_background;
+	Model_table = translate(mat4(1.0f), vec3(0,-3,0)) * scale(mat4(1.0f), vec3(3.0f, 3.0f, 3.0f));
+    MVP_table = Projection * View * Model_table;
     lightPos = vec3(4,4,4);
     camera = direction*(-1.0f)*dist;
     
@@ -89,7 +89,7 @@ void Controller::update() {
 
     View = lookAt(direction*(-1.0f)*dist, vec3(0,0,0), up);
     MVP_object = Projection * View * Model_object;
-    MVP_background = Projection * View * Model_background;
+    MVP_table = Projection * View * Model_table;
     
     lastXpos = xpos;
     lastYpos = ypos;

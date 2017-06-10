@@ -1,9 +1,9 @@
 #version 330 core
 
 // Ouput data
-layout(location = 0) out vec4 res;
+layout(location = 0) out float res;
 
 
 void main(){
-	res = vec4(1.0f, 0.0f, 0.0f, 0.0f);
+	res = 1.0f;
 }

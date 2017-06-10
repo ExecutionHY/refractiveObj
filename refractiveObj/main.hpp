@@ -29,15 +29,17 @@ using namespace glm;
 #include <OpenGL/CGLDevice.h>
 #include <OpenGL/CGLCurrent.h>
 #include <OpenCL/gcl.h>
+
+extern string dir;
 // viewer
 extern int FRAME_WIDTH;
 extern int FRAME_HEIGHT;
 // voxelizer
 #define VOXEL_CNT 8
-//extern float refIndex[VOXEL_CNT][VOXEL_CNT][VOXEL_CNT];
+// vec4(gradx, grady, gradz, n)
 extern vec4 grad_n[VOXEL_CNT][VOXEL_CNT][VOXEL_CNT];
 extern vec4 radiance[VOXEL_CNT][VOXEL_CNT][VOXEL_CNT];
 
-extern string dir;
+
 
 #endif /* main_hpp */

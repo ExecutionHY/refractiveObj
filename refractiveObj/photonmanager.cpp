@@ -7,7 +7,7 @@
 //
 
 #include "photonmanager.hpp"
-vec4 out[1024][1024];
+vec4 out[1600][1200];
 PhotonManager::PhotonManager() {}
 PhotonManager::~PhotonManager() {}
 
@@ -128,7 +128,7 @@ int PhotonManager::march_share() {
 		exit(1);
 	}
 	output_buff = clCreateBuffer(context, CL_MEM_WRITE_ONLY,
-								sizeof(vec4)*1024*1024, NULL, NULL);
+								sizeof(vec4)*FRAME_WIDTH*FRAME_HEIGHT, NULL, NULL);
 	
 	/* Create kernel arguments from the CL buffers */
 	err = clSetKernelArg(kernel, 0, sizeof(cl_mem), &input_buff);
@@ -171,21 +171,21 @@ int PhotonManager::march_execute() {
 	
 	
 	/* Read the result */
-	err = clEnqueueReadBuffer(queue, output_buff, CL_TRUE, 0, sizeof(vec4)*1024*1024, out, 0, NULL, NULL);
+	err = clEnqueueReadBuffer(queue, output_buff, CL_TRUE, 0, sizeof(vec4)*FRAME_WIDTH*FRAME_HEIGHT, out, 0, NULL, NULL);
 	if(err < 0) {
 		perror("Couldn't enqueue the read buffer command");
 		exit(1);
 	}
 	clEnqueueReleaseGLObjects(queue, 1, &input_buff, 0,0,0);
 	clFinish(queue);
-	
+	/*
 	int cnt = 0;
-	for (int i = 0; i < 1024; i++) {
-		for (int j = 0; j < 1024; j++)
+	for (int i = 0; i < FRAME_WIDTH; i++) {
+		for (int j = 0; j < FRAME_HEIGHT; j++)
 			if (out[i][j].x > 0.5) cnt++;
 	}
 	printf("%d\n", cnt);
-	
+	*/
 	
 	/* Deallocate resources */
 	clReleaseMemObject(input_buff);

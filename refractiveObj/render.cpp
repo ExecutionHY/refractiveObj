@@ -60,12 +60,15 @@ Render::~Render() {
     glDeleteBuffers(1, &normalbuffer_object);
     glDeleteBuffers(1, &elementbuffer_object);
     
-    glDeleteBuffers(1, &vertexbuffer_background);
-    glDeleteBuffers(1, &uvbuffer_background);
-    glDeleteBuffers(1, &normalbuffer_background);
-	glDeleteBuffers(1, &elementbuffer_background);
+    glDeleteBuffers(1, &vertexbuffer_table);
+    glDeleteBuffers(1, &uvbuffer_table);
+    glDeleteBuffers(1, &normalbuffer_table);
+	glDeleteBuffers(1, &elementbuffer_table);
 	
 	glDeleteBuffers(1, &vertexbuffer_skybox);
+	
+	// Cleanup FBO
+	glDeleteFramebuffers(1, &frameBuffer_photon);
 	
     // Clean up VAO
     glDeleteVertexArrays(1, &VertexArrayID);
@@ -101,25 +104,25 @@ void Render::loadModels() {
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, m_object.indices.size() * sizeof(unsigned short), &m_object.indices[0] , GL_STATIC_DRAW);
     
     // load background
-    m_background.init("background.obj");
+    m_table.init("table.obj");
     
     // generate VBO
-    glGenBuffers(1, &vertexbuffer_background);
-    glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer_background);
-    glBufferData(GL_ARRAY_BUFFER, m_object.indexed_vertices.size() * sizeof(vec3), &m_background.indexed_vertices[0], GL_STATIC_DRAW);
+    glGenBuffers(1, &vertexbuffer_table);
+    glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer_table);
+    glBufferData(GL_ARRAY_BUFFER, m_object.indexed_vertices.size() * sizeof(vec3), &m_table.indexed_vertices[0], GL_STATIC_DRAW);
     
-    glGenBuffers(1, &uvbuffer_background);
-    glBindBuffer(GL_ARRAY_BUFFER, uvbuffer_background);
-    glBufferData(GL_ARRAY_BUFFER, m_object.indexed_uvs.size() * sizeof(vec2), &m_background.indexed_uvs[0], GL_STATIC_DRAW);
+    glGenBuffers(1, &uvbuffer_table);
+    glBindBuffer(GL_ARRAY_BUFFER, uvbuffer_table);
+    glBufferData(GL_ARRAY_BUFFER, m_object.indexed_uvs.size() * sizeof(vec2), &m_table.indexed_uvs[0], GL_STATIC_DRAW);
     
-    glGenBuffers(1, &normalbuffer_background);
-    glBindBuffer(GL_ARRAY_BUFFER, normalbuffer_background);
-    glBufferData(GL_ARRAY_BUFFER, m_object.indexed_normals.size() * sizeof(vec3), &m_background.indexed_normals[0], GL_STATIC_DRAW);
+    glGenBuffers(1, &normalbuffer_table);
+    glBindBuffer(GL_ARRAY_BUFFER, normalbuffer_table);
+    glBufferData(GL_ARRAY_BUFFER, m_object.indexed_normals.size() * sizeof(vec3), &m_table.indexed_normals[0], GL_STATIC_DRAW);
     
     // Generate a buffer for the indices as well
-    glGenBuffers(1, &elementbuffer_background);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, elementbuffer_background);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, m_object.indices.size() * sizeof(unsigned short), &m_background.indices[0] , GL_STATIC_DRAW);
+    glGenBuffers(1, &elementbuffer_table);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, elementbuffer_table);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, m_object.indices.size() * sizeof(unsigned short), &m_table.indices[0] , GL_STATIC_DRAW);
 	
 	// skybox
 	
@@ -208,10 +211,14 @@ void Render::loadPrograms() {
 	program_sky.uniformID_Projection = glGetUniformLocation(program_sky.programID, "P");
 	program_sky.uniformID_View = glGetUniformLocation(program_sky.programID, "V");
 	program_sky.uniformID_CubeMap = glGetUniformLocation(program_sky.programID, "CubeMap");
+	
+	// program for photon map
+	
+	program_photon.initShader("photonmap.vert", "photonmap.frag", NULL);
+	program_photon.uniformID_LightMVP = glGetUniformLocation(program_photon.programID, "lightMVP");
 }
 
 int Render::run() {
-	
 	
 	// init controller
     controller.init(window);
@@ -225,7 +232,7 @@ int Render::run() {
 	// voxelization
 	float t1 = glfwGetTime();
 	voxelizer.work(m_object.indexed_vertices, m_object.indices);
-	voxelizer.print();
+	//voxelizer.print();
 	printf("Voxelization time = %6f s\n", glfwGetTime()-t1);
 	
 	
@@ -237,31 +244,13 @@ int Render::run() {
 	texture_gradN.load3DArray(grad_n);
 	texture_radiance.load3DArray(radiance);
 
-	program_photon.initShader("photonmap.vert", "photonmap.frag", NULL);
-	program_photon.uniformID_LightMVP = glGetUniformLocation(program_photon.programID, "lightMVP");
-	
-	
-	
 	// The framebuffer, which regroups 0, 1, or more textures, and 0 or 1 depth buffer.
-	GLuint FramebufferName = 0;
-	glGenFramebuffers(1, &FramebufferName);
-	glBindFramebuffer(GL_FRAMEBUFFER, FramebufferName);
+	glGenFramebuffers(1, &frameBuffer_photon);
+	glBindFramebuffer(GL_FRAMEBUFFER, frameBuffer_photon);
 	
-	// Depth texture. Slower than a depth buffer, but you can sample it later in your shader
-	GLuint depthTexture;
-	glGenTextures(1, &depthTexture);
-	glBindTexture(GL_TEXTURE_2D, depthTexture);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 1024, 1024, 0, GL_RGBA, GL_FLOAT, NULL);
+	texture_photon.initDepth();
 	
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_FUNC, GL_GEQUAL);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_REF_TO_TEXTURE);	
-	
-	
-	glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, depthTexture, 0);
+	glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, texture_photon.textureID, 0);
 	
 	// No color output in the bound framebuffer, only depth.
 	glDrawBuffer(GL_NONE);
@@ -271,9 +260,11 @@ int Render::run() {
 		return false;
 	
 	
+	t1 = glfwGetTime();
+	
 	// Render to our framebuffer
-	glBindFramebuffer(GL_FRAMEBUFFER, FramebufferName);
-	glViewport(0,0,1024,1024); // Render on the whole framebuffer, complete from the lower left corner to the upper right
+	glBindFramebuffer(GL_FRAMEBUFFER, frameBuffer_photon);
+	glViewport(0,0,FRAME_WIDTH,FRAME_HEIGHT); // Render on the whole framebuffer, complete from the lower left corner to the upper right
 	
 	// Clear the screen
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -312,10 +303,8 @@ int Render::run() {
 	glDisableVertexAttribArray(0);
 	
 	
-	
-	
-	
-	photonManager.generate(depthTexture);
+	photonManager.generate(texture_photon.textureID);
+	printf("Photon generation time = %6f s\n", glfwGetTime()-t1);
 	
 	do {
 		controller.update();
@@ -399,42 +388,42 @@ int Render::run() {
         glDisableVertexAttribArray(1);
         glDisableVertexAttribArray(2);
 		
-		/*
 		
-        // Draw m_background
+		
+        // Draw m_table
         
         // Use our shader
         glUseProgram(program_std.programID);
         
         glUniformMatrix4fv(program_std.uniformID_View, 1, GL_FALSE, &controller.View[0][0]);
-        glUniformMatrix4fv(program_std.uniformID_Model, 1, GL_FALSE, &controller.Model_background[0][0]);
-        glUniformMatrix4fv(program_std.uniformID_MVP, 1, GL_FALSE, &controller.MVP_background[0][0]);
+        glUniformMatrix4fv(program_std.uniformID_Model, 1, GL_FALSE, &controller.Model_table[0][0]);
+        glUniformMatrix4fv(program_std.uniformID_MVP, 1, GL_FALSE, &controller.MVP_table[0][0]);
         glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, bgTexture.textureID);
+        glBindTexture(GL_TEXTURE_2D, texture_photon.textureID);
         glUniform1i(program_std.uniformID_Texture, 0);
 		 
 		glUniform3f(program_std.uniformID_Light, controller.lightPos.x, controller.lightPos.y, controller.lightPos.z);
 		 
         // attribute buffer
         glEnableVertexAttribArray(0);
-        glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer_background);
+        glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer_table);
         glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
         glEnableVertexAttribArray(1);
-        glBindBuffer(GL_ARRAY_BUFFER, uvbuffer_background);
+        glBindBuffer(GL_ARRAY_BUFFER, uvbuffer_table);
         glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, (void*)0);
         glEnableVertexAttribArray(2);
-        glBindBuffer(GL_ARRAY_BUFFER, normalbuffer_background);
+        glBindBuffer(GL_ARRAY_BUFFER, normalbuffer_table);
         glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
         // Index buffer
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, elementbuffer_background);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, elementbuffer_table);
         
-        glDrawElements(GL_TRIANGLES, m_background.indices.size(), GL_UNSIGNED_SHORT, (void*)0);
+        glDrawElements(GL_TRIANGLES, m_table.indices.size(), GL_UNSIGNED_SHORT, (void*)0);
         
         glDisableVertexAttribArray(0);
         glDisableVertexAttribArray(1);
         glDisableVertexAttribArray(2);
 		
-		*/
+		
 		
         char text[256];
         sprintf(text,"fps: %.2f, time: %.2f s", controller.fps, glfwGetTime());
