@@ -34,11 +34,13 @@ extern string dir;
 // viewer
 extern int FRAME_WIDTH;
 extern int FRAME_HEIGHT;
+extern int MAP_WIDTH;
+extern int MAP_HEIGHT;
 // voxelizer
 #define VOXEL_CNT 8
 // vec4(gradx, grady, gradz, n)
-extern vec4 grad_n[VOXEL_CNT][VOXEL_CNT][VOXEL_CNT];
-extern vec4 radiance[VOXEL_CNT][VOXEL_CNT][VOXEL_CNT];
+extern vec4 grad_n[VOXEL_CNT*VOXEL_CNT*VOXEL_CNT];
+extern vec4 radiance[VOXEL_CNT*VOXEL_CNT*VOXEL_CNT];
 
 
 

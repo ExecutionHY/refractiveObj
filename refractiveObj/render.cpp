@@ -241,8 +241,8 @@ int Render::run() {
 	text2d.init("Holstein.DDS");
 	texture_skybox.loadCubeMap("river");
 	
-	texture_gradN.load3DArray(grad_n);
-	texture_radiance.load3DArray(radiance);
+	texture_gradN.load3D(grad_n);
+	texture_radiance.load3D(radiance);
 
 	// The framebuffer, which regroups 0, 1, or more textures, and 0 or 1 depth buffer.
 	glGenFramebuffers(1, &frameBuffer_photon);
@@ -250,21 +250,30 @@ int Render::run() {
 	
 	texture_photon.initDepth();
 	
-	glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, texture_photon.textureID, 0);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, texture_photon.textureID, 0);
 	
 	// No color output in the bound framebuffer, only depth.
-	glDrawBuffer(GL_NONE);
+	glDrawBuffer(GL_COLOR_ATTACHMENT0);
 	
 	// Always check that our framebuffer is ok
 	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
 		return false;
 	
 	
+	
+	
 	t1 = glfwGetTime();
 	
 	// Render to our framebuffer
 	glBindFramebuffer(GL_FRAMEBUFFER, frameBuffer_photon);
-	glViewport(0,0,FRAME_WIDTH,FRAME_HEIGHT); // Render on the whole framebuffer, complete from the lower left corner to the upper right
+	//GLenum bufs[] = {GL_COLOR_ATTACHMENT0,};
+	//glDrawBuffers(1, bufs);
+	glDrawBuffer(GL_COLOR_ATTACHMENT0);
+	
+	glEnable(GL_CULL_FACE);
+	glCullFace(GL_BACK); // Cull back-facing triangles -> draw only front-facing triangles
+	
+	glViewport(0,0,MAP_WIDTH,MAP_HEIGHT); // Render on the whole framebuffer, complete from the lower left corner to the upper right
 	
 	// Clear the screen
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -272,17 +281,20 @@ int Render::run() {
 	// Use our shader
 	glUseProgram(program_photon.programID);
 	
-	glm::vec3 lightInvDir = glm::vec3(0.5f,2,2);
+	glm::vec3 lightInvDir = glm::vec3(2,2,2);
+	
 	
 	// Compute the MVP matrix from the light's point of view
-	//glm::mat4 depthProjectionMatrix = glm::ortho<float>(-10,10,-10,10,-10,20);
-	//glm::mat4 depthViewMatrix = glm::lookAt(lightInvDir, glm::vec3(0,0,0), glm::vec3(0,1,0));
-	// or, for spot light :
-	glm::vec3 lightPos(5, 20, 20);
-	glm::mat4 depthProjectionMatrix = glm::perspective<float>(45.0f, 1.0f, 2.0f, 50.0f);
-	glm::mat4 depthViewMatrix = glm::lookAt(lightPos, lightPos-lightInvDir, glm::vec3(0,1,0));
+	glm::mat4 depthProjectionMatrix = glm::ortho<float>(-2,2,-2,2,0,4);
+	glm::mat4 depthViewMatrix = glm::lookAt(lightInvDir, glm::vec3(0,0,0), glm::vec3(0,1,0));
 	
+	// or, for spot light :
+	
+	//glm::vec3 lightPos(5, 20, 20);
+	//glm::mat4 depthProjectionMatrix = glm::perspective<float>(45.0f, 1.0f, 2.0f, 50.0f);
+	//glm::mat4 depthViewMatrix = glm::lookAt(lightPos, lightPos-lightInvDir, glm::vec3(0,1,0));
 	glm::mat4 depthModelMatrix = glm::mat4(1.0);
+	
 	glm::mat4 depthMVP = depthProjectionMatrix * depthViewMatrix * depthModelMatrix;
 	
 	// Send our transformation to the currently bound shader,
@@ -303,9 +315,12 @@ int Render::run() {
 	glDisableVertexAttribArray(0);
 	
 	
+	
 	photonManager.generate(texture_photon.textureID);
 	printf("Photon generation time = %6f s\n", glfwGetTime()-t1);
 	
+	
+	 
 	do {
 		controller.update();
 		

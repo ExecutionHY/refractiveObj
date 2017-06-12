@@ -8,6 +8,8 @@ refractiveObj
 
 [https://www.google.com/patents/US20100033482](https://www.google.com/patents/US20100033482)
 
+[TOC]
+
 ## 0.1 创建工程
 
 May 27
@@ -239,3 +241,29 @@ Jun 10
 
 将 photon map 的3D空间位置找到，然后对这些光子进行简单的 march ，修改radiance 。
 
+## 1.11 photon march
+
+Jun 11
+
+通过 photon map 来对每个光子进行处理，CL 处理器是以一个二维 frame 的角度去计算的，对于一个光子，我们要通过 light_MVP 的逆矩阵转换回原坐标位置，再处理。
+
+这里有两个难点：
+
+一，如何获取原坐标经过 lightMVP 矩阵变换后的值 pos_lightspace ，此向量经过变换后的范围可能是 [0 - 1] 的 float，代验证。
+
+二，对于每一个光子，在推进的过程中很可能出现多个处理器修改同一个变量的情况。这个问题在论文中有提到，如果用 geometry shader 可以解决，但是还是存在数据传输等困难。CL 的解决办法之一是 atomic 操作。系统规定了几个原子操作，就是为了这个时刻准备的。然而比较尴尬的是，只给了 int 类型的，没有给 float 类型的，在网上找到了一篇文章[http://suhorukov.blogspot.com/2011/12/opencl-11-atomic-operations-on-floating.html](http://suhorukov.blogspot.com/2011/12/opencl-11-atomic-operations-on-floating.html) 介绍了如何自定义 float 类型的原子操作，然而我想要的是 float4 的操作，无论我怎么试，都没法通过编译测试，最后无奈只能把 radiance 的三个维度分开来传输。
+
+没有报错，但是输出结果不对。测试发现，map 的信息均为 0。
+
+Jun 12
+
+经过了一些调试，成功疏通了 photon map 的整个通道，texture 可以在桌子上显现出来。现在在 map 中有 4 个通道 rgba，其中 a 通道包含和 shadow map 一样的深度信息，大于 0 就认为有光子（大概吧）。rgb 通道保存 pos_worldspace 信息（因为 M 矩阵是单位矩阵就不用乘了，直接用 pos_modelspace ）。这样我们读取 map 的信息的时候就可以获得如下信息：这个位置是否释放光子，及这个光子的初始位置。
+
+然后我进行了简易的 march 操作，把光子推进一段距离，并把沿途的 radiance 进行累加。然而出了点 bug，貌似 radiance 没法对结果造成影响。这是 radiance 全部进行初始化为一种蓝色的时候的结果，看上去还可以，但是讲道理如果真的累计了沿途的 radiance 的话早该溢出来了，颜色分布也不可能是均衡的。
+
+![1-9](./project-log-img/1-11.png)
+
+一些将要调试的东西：
+
+- 光子的初始位置信息，转换成体素位置的时候可能会有一定的偏差，原则上我们要保证初始位置在 model 的外面，这个要在之后进行修正。
+- Viewing Pass 要用 CL 代码去生成。然后用简单的 passthrough 的 shader 来绘制。

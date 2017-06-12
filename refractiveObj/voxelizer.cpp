@@ -16,11 +16,12 @@ bool Voxelizer::work(vector<vec3> & indexed_vertices,
 	
 	voxelize_CL(indexed_vertices, indices);
 	
+	/*
 	for (int i = 0; i < VOXEL_CNT; i++)
 		for (int j = 0; j < VOXEL_CNT; j++)
 			for (int k = 0; k < VOXEL_CNT; k++)
-				radiance[i][j][k] = vec4(0.03, 0.06, 0.06, 1);
-	
+				radiance[i*VOXEL_CNT*VOXEL_CNT+j*VOXEL_CNT+k] = vec4(0.03, 0.06, 0.06, 1);
+	*/
 	
 	return true;
 }
@@ -29,7 +30,7 @@ void Voxelizer::print() {
 	for (int i = 0; i < VOXEL_CNT; i++)
 		for (int j = 0; j < VOXEL_CNT; j++)
 			for (int k = 0; k < VOXEL_CNT; k++)
-				printf("i: %2d, j: %2d, k: %2d, ri = %6f,  (%3f, %3f, %3f)\n", i, j, k, grad_n[i][j][k].w, grad_n[i][j][k].x, grad_n[i][j][k].y, grad_n[i][j][k].z);
+				printf("i: %2d, j: %2d, k: %2d, ri = %6f,  (%3f, %3f, %3f)\n", i, j, k, grad_n[i*VOXEL_CNT*VOXEL_CNT+j*VOXEL_CNT+k].w, grad_n[i*VOXEL_CNT*VOXEL_CNT+j*VOXEL_CNT+k].x, grad_n[i*VOXEL_CNT*VOXEL_CNT+j*VOXEL_CNT+k].y, grad_n[i*VOXEL_CNT*VOXEL_CNT+j*VOXEL_CNT+k].z);
 }
 
 

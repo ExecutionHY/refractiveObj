@@ -30,8 +30,10 @@ private:
 	
 	/* Data and buffers */
 	cl_int voxel_3 = VOXEL_CNT*VOXEL_CNT*VOXEL_CNT;
-	cl_mem input_buff, output_buff;
+	cl_mem map_buff, gradN_buff, matrix_buff,rx_buff, ry_buff, rz_buff;
 	size_t work_units_per_kernel;
+	
+	cl_mem input_buff, output_buff;
 	
 	
 public:

@@ -22,7 +22,7 @@ public:
     void loadDDS(const char * imagepath);
 	
 	void loadCubeMap(const char * mapname);
-	void load3DArray(vec4 arr[VOXEL_CNT][VOXEL_CNT][VOXEL_CNT]);
+	void load3D(vec4 arr[]);
 	void initDepth();
 	
     GLuint textureID;
