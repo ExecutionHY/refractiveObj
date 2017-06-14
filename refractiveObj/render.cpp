@@ -232,7 +232,7 @@ int Render::run() {
 	// voxelization
 	float t1 = glfwGetTime();
 	voxelizer.work(m_object.indexed_vertices, m_object.indices);
-	//voxelizer.print();
+	voxelizer.print();
 	printf("Voxelization time = %6f s\n", glfwGetTime()-t1);
 	
 	
@@ -316,7 +316,7 @@ int Render::run() {
 	
 	
 	
-	photonManager.generate(texture_photon.textureID);
+	//photonManager.generate(texture_photon.textureID);
 	printf("Photon generation time = %6f s\n", glfwGetTime()-t1);
 	
 	

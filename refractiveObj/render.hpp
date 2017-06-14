@@ -31,6 +31,7 @@ private:
 	
 	Model m_object;
 	Model m_table;
+	Model m_box;
 	void loadModels();
 	
 	Texture bgTexture;
