@@ -33,8 +33,9 @@ private:
 	cl_mem map_buff, gradN_buff, matrix_buff,rx_buff, ry_buff, rz_buff;
 	size_t work_units_per_kernel;
 	
-	cl_mem input_buff, output_buff;
-	
+	cl_mem input_buff, output_buff, radiance_buff, mask_buff;
+	int maskSize;
+	vec3 lightPos;
 	
 public:
 	
@@ -45,6 +46,8 @@ public:
 	int march_init();
 	int march_share();
 	int march_execute();
+	int march_blur();
+	int march_release();
 
 };
 

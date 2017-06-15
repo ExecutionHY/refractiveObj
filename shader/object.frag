@@ -1,5 +1,5 @@
 #version 330 core
-#define EPSILON 0.001
+#define EPSILON 0.00001
 
 // Interpolated values from the vertex shaders
 in vec3 Position_worldspace;
@@ -27,14 +27,6 @@ vec3 bgpos(vec3 pos, vec3 dir) {
 	return pos+dir*minstep;
 }
 
-float getn(vec3 pos) {
-	float n;
-	if (length(pos) < 0.8) n = 1.5f;
-	else if (0.8-EPSILON <= length(pos) && length(pos) <= 0.8) n = 1.34f;
-	else if (0.8 <= length(pos) && length(pos) <= 0.8+EPSILON) n = 1.17f;
-	else n = 1.0f;
-	return n;
-}
 
 void main(){
     
@@ -55,21 +47,23 @@ void main(){
 	
     for (int i = 0; i < voxel_cnt+3; i++) {
 		// only focus on a cube
-		//if (abs(pos.x) >= 1 || abs(pos.y) >= 1 || abs(pos.z) >= 1) break;
+		if (abs(pos.x) >= 1 || abs(pos.y) >= 1 || abs(pos.z) >= 1)
+			if (i > voxel_cnt / 3) break;
 		//if (n < 1 + EPSILON && i > voxel_cnt/3) break;
 		n = texture(grad_n, (pos+vec3(1,1,1))*0.5).a + 1.0f;
 		npos = pos + stepSize / n * v;
 		gradn = texture(grad_n, (pos+vec3(1,1,1))*0.5).rgb;
 		nv = v + gradn;
 		// sum up radiance
-		//radiance += texture(radianceDistribution, (pos+vec3(1,1,1))*0.5).rgb;
+		radiance += texture(radianceDistribution, (pos+vec3(1,1,1))*0.5).rgb;
 		
 		pos = npos;
 		v = nv;
-		dir = normalize(v);
+		//dir = normalize(v);
 	}
 	
 	// direction * 10
-	color = texture(CubeMap, bgpos(pos, normalize(v))).rgb;
+	color = radiance + texture(CubeMap, bgpos(pos, normalize(v))).rgb;
+	
 	
 }

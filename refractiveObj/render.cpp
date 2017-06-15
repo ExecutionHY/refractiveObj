@@ -83,7 +83,7 @@ void Render::loadModels() {
     glBindVertexArray(VertexArrayID);
     
     // load object
-    m_object.init("ball.obj");
+    m_object.init("cube.obj");
     
     // generate VBO
     glGenBuffers(1, &vertexbuffer_object);
@@ -229,10 +229,11 @@ int Render::run() {
 	// init models
 	loadModels();
 	
+	
 	// voxelization
 	float t1 = glfwGetTime();
 	voxelizer.work(m_object.indexed_vertices, m_object.indices);
-	voxelizer.print();
+	//voxelizer.print();
 	printf("Voxelization time = %6f s\n", glfwGetTime()-t1);
 	
 	
@@ -241,8 +242,6 @@ int Render::run() {
 	text2d.init("Holstein.DDS");
 	texture_skybox.loadCubeMap("river");
 	
-	texture_gradN.load3D(grad_n);
-	texture_radiance.load3D(radiance);
 
 	// The framebuffer, which regroups 0, 1, or more textures, and 0 or 1 depth buffer.
 	glGenFramebuffers(1, &frameBuffer_photon);
@@ -281,21 +280,21 @@ int Render::run() {
 	// Use our shader
 	glUseProgram(program_photon.programID);
 	
-	glm::vec3 lightInvDir = glm::vec3(2,2,2);
+	vec3 lightInvDir = vec3(0,2,0);
 	
 	
 	// Compute the MVP matrix from the light's point of view
-	glm::mat4 depthProjectionMatrix = glm::ortho<float>(-2,2,-2,2,0,4);
-	glm::mat4 depthViewMatrix = glm::lookAt(lightInvDir, glm::vec3(0,0,0), glm::vec3(0,1,0));
+	mat4 depthProjectionMatrix = ortho<float>(-0.4, 0.4, -0.4, 0.4, 0, 2);
+	mat4 depthViewMatrix = lookAt(lightInvDir, vec3(0,0,0), vec3(1,0,0));
 	
 	// or, for spot light :
 	
-	//glm::vec3 lightPos(5, 20, 20);
-	//glm::mat4 depthProjectionMatrix = glm::perspective<float>(45.0f, 1.0f, 2.0f, 50.0f);
-	//glm::mat4 depthViewMatrix = glm::lookAt(lightPos, lightPos-lightInvDir, glm::vec3(0,1,0));
-	glm::mat4 depthModelMatrix = glm::mat4(1.0);
+	//vec3 lightPos(5, 20, 20);
+	//mat4 depthProjectionMatrix = perspective<float>(45.0f, 1.0f, 2.0f, 50.0f);
+	//mat4 depthViewMatrix = lookAt(lightPos, lightPos-lightInvDir, vec3(0,1,0));
+	mat4 depthModelMatrix = mat4(1.0);
 	
-	glm::mat4 depthMVP = depthProjectionMatrix * depthViewMatrix * depthModelMatrix;
+	mat4 depthMVP = depthProjectionMatrix * depthViewMatrix * depthModelMatrix;
 	
 	// Send our transformation to the currently bound shader,
 	// in the "MVP" uniform
@@ -314,11 +313,15 @@ int Render::run() {
 	
 	glDisableVertexAttribArray(0);
 	
+	printf("Photon mapping time = %6f s\n", glfwGetTime()-t1);
 	
 	
-	//photonManager.generate(texture_photon.textureID);
-	printf("Photon generation time = %6f s\n", glfwGetTime()-t1);
+	t1 = glfwGetTime();
+	photonManager.generate(texture_photon.textureID);
+	printf("Photon marching time = %6f s\n", glfwGetTime()-t1);
 	
+	texture_gradN.load3D(grad_n);
+	texture_radiance.load3D(radiance);
 	
 	 
 	do {

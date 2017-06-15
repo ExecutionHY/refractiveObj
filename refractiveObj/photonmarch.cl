@@ -1,4 +1,4 @@
-#define EPSILON 0.000001
+#define EPSILON 0.00001
 __constant sampler_t sampler =
 CLK_NORMALIZED_COORDS_FALSE
 | CLK_ADDRESS_CLAMP_TO_EDGE
@@ -30,7 +30,6 @@ __kernel void photonmarch(__read_only image2d_t map,
 						  __global float* rz) {
 	
 	
-	
 	int i = get_global_id(0);
 	
 	float4 pos_inmap;
@@ -38,30 +37,105 @@ __kernel void photonmarch(__read_only image2d_t map,
 	
 	if (pos_inmap.w > EPSILON) {
 		
-		float4 pos_worldspace; // lightspace * reverse(light_mvp) * M
-		pos_worldspace.xyz = pos_inmap.xyz * 10.0f - float3(2,2,2);
+		// pos_worldspace = lightspace * reverse(light_mvp) * M
+		float3 pos = pos_inmap.xyz * 10.0f - float3(2,2,2);
 		
-		float3 dir = pos_worldspace.xyz - light_pos;
-		float stepsize = 2.0/voxel_cnt;
+		float3 dir = normalize(pos-light_pos);
+		float stepsize = 2.0f / voxel_cnt;
 		
-		int x = pos_worldspace.x * (voxel_cnt/2.0) + (voxel_cnt/2.0);
-		int y = pos_worldspace.y * (voxel_cnt/2.0) + (voxel_cnt/2.0);
-		int z = pos_worldspace.z * (voxel_cnt/2.0) + (voxel_cnt/2.0);
-		int index = x*voxel_cnt*voxel_cnt+y*voxel_cnt+z;
+		pos += dir*stepsize*3;
+		int x = pos.x * (voxel_cnt/2.0) + (voxel_cnt/2.0);
+		int y = pos.y * (voxel_cnt/2.0) + (voxel_cnt/2.0);
+		int z = pos.z * (voxel_cnt/2.0) + (voxel_cnt/2.0);
+		int index = x*voxel_cnt*voxel_cnt + y*voxel_cnt + z;
+		float n = gradN[index].w + 1.0f;
+		float3 v = n * dir, nv, npos;
 		
+		
+		int s = index;
+		float3 sv[25], sg[25];
+		int cnt = 0, pass = 0, end = 0;
+
+		rx[index] = 1.0f;
 		for (int ii = 0; ii < voxel_cnt; ii++) {
-			if (gradN[index].w > 1+EPSILON) {
-				AtomicAdd(&rx[index], 0.001);
-				AtomicAdd(&ry[index], 0.001);
-				AtomicAdd(&rz[index], 0.001);
-				pos_worldspace.xyz += normalize(dir)*stepsize;
-				
-				x = pos_worldspace.x * (voxel_cnt/2.0) + (voxel_cnt/2.0);
-				y = pos_worldspace.y * (voxel_cnt/2.0) + (voxel_cnt/2.0);
-				z = pos_worldspace.z * (voxel_cnt/2.0) + (voxel_cnt/2.0);
-				index = x*voxel_cnt*voxel_cnt+y*voxel_cnt+z;
+			x = pos.x * (voxel_cnt/2.0) + (voxel_cnt/2.0);
+			y = pos.y * (voxel_cnt/2.0) + (voxel_cnt/2.0);
+			z = pos.z * (voxel_cnt/2.0) + (voxel_cnt/2.0);
+			index = x*voxel_cnt*voxel_cnt + y*voxel_cnt + z;
+			n = gradN[index].w + 1.0f;
+			
+			if (pos.x > 1-EPSILON || pos.y > 1-EPSILON || pos.z > 1-EPSILON ||
+				pos.x < -1+EPSILON || pos.y < -1+EPSILON || pos.z < -1+EPSILON) {
+				end = 1;
+				break;
+			}
+			
+			if (n < 1 + EPSILON) {
+				if (pass == 1) {
+					AtomicAdd(&rx[index], 0.0003);
+					AtomicAdd(&ry[index], 0.0003);
+					AtomicAdd(&rz[index], 0.0003);
+				}
+			}
+			else if (n > 1.02){
+				pass = 1;
+			}
+			
+			
+			npos = pos + stepsize / n * v;
+			nv = v + gradN[index].xyz;
+			pos = npos;
+			v = nv;
+			
+			cnt++;
+			sv[ii] = v;
+			sg[ii] = gradN[index].xyz;
+		}
+		if (end == 1) rz[index] = 1.0f;
+		else ry[index] = 1.0f;
+		
+		/*
+		if (i == 3120) {
+			for (int j = 0; j < 25; j++) {
+				printf("%d: + (%f, %f, %f) = (%f, %f, %f)\n", j, sg[j].x, sg[j].y, sg[j].z, sv[j].x, sv[j].y, sv[j].z);
 			}
 		}
+		 */
 	}
+}
+
+__kernel void radianceblur(__global float* rx,
+				   __global float* ry,
+				   __global float* rz,
+				   __global float4* radiance,
+				   __global float* mask,
+				   int maskSize,
+				   int voxel_cnt
+				   ) {
+	
+	int i = get_global_id(0);
+	
+	int x = i / (voxel_cnt * voxel_cnt);
+	int y = (i % (voxel_cnt * voxel_cnt)) / voxel_cnt;
+	int z = i % voxel_cnt;
+	
+	
+	if (maskSize < x && x < voxel_cnt - maskSize &&
+		maskSize < y && y < voxel_cnt - maskSize &&
+		maskSize < z && z < voxel_cnt - maskSize) {
+		float4 sum = 0.0f;
+		for(int a = -maskSize; a < maskSize+1; a++) {
+			for(int b = -maskSize; b < maskSize+1; b++) {
+				for(int c = -maskSize; c < maskSize+1; c++) {
+					int index = i+a*voxel_cnt*voxel_cnt+b*voxel_cnt+c;
+					sum += mask[(a+maskSize)*(maskSize*2+1)*(maskSize*2+1)+(b+maskSize)*(maskSize*2+1)+(c+maskSize)] * (float4)(rx[index], ry[index], rz[index], 0.0f);
+				}
+			}
+		}
+		radiance[i] = sum;
+	}
+	else
+		radiance[i] = (float4)(rx[i], ry[i], rz[i], 0.0f);
+		
 }
 

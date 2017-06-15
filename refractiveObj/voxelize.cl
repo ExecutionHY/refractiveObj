@@ -97,7 +97,7 @@ __kernel void voxelize(__global ushort* indices,
 	if (intersectCnt % 2 == 1) refIndex[i] = refConst;
 	else refIndex[i] = 1.0f;
 	*/
-	if (length(pos) < 0.5f) refIndex[i] = refConst;
+	if (distance(pos, (float3)(0, 0.5, 0)) < 0.3f) refIndex[i] = refConst;
 	else refIndex[i] = 1.0f;
 	
 	// part2 - super-sample those border voxels
@@ -111,7 +111,7 @@ __kernel void voxelize(__global ushort* indices,
 			for (float b = -0.375; b <= 0.375; b += 0.25) {
 				for (float c = -0.375; c <= 0.375; c += 0.25) {
 					float3 newPos = pos + float3(a, b, c)*voxel_width;
-					if (length(newPos) < 0.5f) refIndex[i] += refConst/64.0f;
+					if (distance(newPos, (float3)(0, 0.5, 0)) < 0.3f) refIndex[i] += refConst/64.0f;
 					else refIndex[i] += 1.0f/64.0f;
 					/*
 					int intersectCnt = 0;
@@ -156,7 +156,7 @@ __kernel void blur(__global float* raw,
 		for(int a = -maskSize; a < maskSize+1; a++) {
 			for(int b = -maskSize; b < maskSize+1; b++) {
 				for(int c = -maskSize; c < maskSize+1; c++) {
-					sum += mask[(a+maskSize)*(maskSize*2+1)*(maskSize*2+1)+(b+maskSize)*(maskSize*2+1)+(c+maskSize)] * raw[(x+a)*voxel_cnt*voxel_cnt+(y+b)*voxel_cnt+(z+c)];
+					sum += mask[(a+maskSize)*(maskSize*2+1)*(maskSize*2+1)+(b+maskSize)*(maskSize*2+1)+(c+maskSize)] * raw[i+a*voxel_cnt*voxel_cnt+b*voxel_cnt+c];
 				}
 			}
 		}

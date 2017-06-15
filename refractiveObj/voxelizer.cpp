@@ -41,8 +41,8 @@ void Voxelizer::print() {
 #define KERNEL_FUNC2 "blur"
 #define KERNEL_FUNC3 "gradient"
 
-float * createBlurMask(float sigma, int * maskSizePointer) {
-	int maskSize = (int)ceil(2.0f*sigma);
+float * createBlurMask3D(float sigma, int * maskSizePointer) {
+	int maskSize = (int)ceil(3.0f*sigma);
 	float * mask = new float[(maskSize*2+1)*(maskSize*2+1)*(maskSize*2+1)];
 	float sum = 0.0f;
 	for(int a = -maskSize; a <= maskSize; a++) {
@@ -86,7 +86,7 @@ int Voxelizer::voxelize_CL(vector<vec3> & indexed_vertices,
 	cl_mem indices_buff, vertices_buff, refIndex_buff,
 		gradn_buff, blured_buff, mask_buff;
 	size_t work_units_per_kernel;
-	float refConst = 1.5f;
+	float refConst = 1.25f;
 	
 	/* Identify a platform */
 	err = clGetPlatformIDs(1, &platform, NULL);
@@ -173,7 +173,7 @@ int Voxelizer::voxelize_CL(vector<vec3> & indexed_vertices,
 								 sizeof(cl_float4)*voxel_3, NULL, NULL);
 	
 	int maskSize;
-	float* mask = createBlurMask(3.0f, &maskSize);
+	float* mask = createBlurMask3D(1.0f, &maskSize);
 	mask_buff = clCreateBuffer(context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, sizeof(float)*(2*maskSize+1)*(2*maskSize+1)*(2*maskSize+1), mask, &err);
 	if(err < 0) {
 		printf("%d ", err);
@@ -213,6 +213,7 @@ int Voxelizer::voxelize_CL(vector<vec3> & indexed_vertices,
 	
 	
 	
+	clReleaseKernel(kernel);
 	//************** blur
 	
 	kernel = clCreateKernel(program, KERNEL_FUNC2, &err);
@@ -241,6 +242,7 @@ int Voxelizer::voxelize_CL(vector<vec3> & indexed_vertices,
 		exit(1);
 	}
 	
+	clReleaseKernel(kernel);
 	//************* gradient
 	
 	kernel = clCreateKernel(program, KERNEL_FUNC3, &err);
