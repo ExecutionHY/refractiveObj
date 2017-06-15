@@ -16,7 +16,8 @@
 #include "texture.hpp"
 #include "text2D.hpp"
 #include "voxelizer.hpp"
-#include "photonmanager.hpp"
+#include "photon_manager.hpp"
+#include "octree_manager.hpp"
 
 class Render {
 private:
@@ -45,6 +46,8 @@ private:
 	
 	Voxelizer voxelizer;
 	PhotonManager photonManager;
+	int photonMapping();
+	OctreeManager octreeManager;
 	
     GLuint VertexArrayID;
     GLuint vertexbuffer_object;

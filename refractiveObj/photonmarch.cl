@@ -52,9 +52,8 @@ __kernel void photonmarch(__read_only image2d_t map,
 		float3 v = n * dir, nv, npos;
 		
 		
-		int s = index;
 		float3 sv[25], sg[25];
-		int cnt = 0, pass = 0, end = 0;
+		int pass = 0, end = 0;
 
 		rx[index] = 1.0f;
 		for (int ii = 0; ii < voxel_cnt; ii++) {
@@ -87,7 +86,6 @@ __kernel void photonmarch(__read_only image2d_t map,
 			pos = npos;
 			v = nv;
 			
-			cnt++;
 			sv[ii] = v;
 			sg[ii] = gradN[index].xyz;
 		}

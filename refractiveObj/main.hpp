@@ -41,7 +41,7 @@ extern int MAP_HEIGHT;
 // vec4(gradx, grady, gradz, n)
 extern vec4 grad_n[VOXEL_CNT*VOXEL_CNT*VOXEL_CNT];
 extern vec4 radiance[VOXEL_CNT*VOXEL_CNT*VOXEL_CNT];
-
+extern int octree[VOXEL_CNT*VOXEL_CNT*VOXEL_CNT];
 
 
 #endif /* main_hpp */

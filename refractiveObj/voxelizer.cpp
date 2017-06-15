@@ -278,6 +278,7 @@ int Voxelizer::voxelize_CL(vector<vec3> & indexed_vertices,
 		exit(1);
 	}
 	
+	clReleaseKernel(kernel);
 	
 	/*
 	for(int a = -maskSize; a <= maskSize; a++) {
@@ -307,7 +308,6 @@ int Voxelizer::voxelize_CL(vector<vec3> & indexed_vertices,
 	clReleaseMemObject(blured_buff);
 	clReleaseMemObject(mask_buff);
 	clReleaseMemObject(gradn_buff);
-	clReleaseKernel(kernel);
 	clReleaseCommandQueue(queue);
 	clReleaseProgram(program);
 	clReleaseContext(context);

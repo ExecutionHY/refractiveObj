@@ -18,6 +18,7 @@ int MAP_HEIGHT = 256;
 
 vec4 grad_n[VOXEL_CNT*VOXEL_CNT*VOXEL_CNT];
 vec4 radiance[VOXEL_CNT*VOXEL_CNT*VOXEL_CNT];
+int octree[VOXEL_CNT*VOXEL_CNT*VOXEL_CNT];
 
 string dir = "/Users/mac/Codes/refractiveObj/";
 

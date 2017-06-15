@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		041A0D5F1ED9915A002B4B84 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 041A0D5E1ED9915A002B4B84 /* main.cpp */; };
+		04253B141EF2F96C0071467C /* octree.cl in Sources */ = {isa = PBXBuildFile; fileRef = 04253B131EF2F96C0071467C /* octree.cl */; };
 		045C3E301ED9941D00870FC4 /* render.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 045C3E2E1ED9941D00870FC4 /* render.cpp */; };
 		045C3E331ED9961D00870FC4 /* model.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 045C3E311ED9961D00870FC4 /* model.cpp */; };
 		045C3E361ED9968000870FC4 /* OpenGL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 045C3E351ED9968000870FC4 /* OpenGL.framework */; };
@@ -15,9 +16,10 @@
 		045C3E3A1ED9991B00870FC4 /* libglfw.3.2.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 045C3E391ED9991B00870FC4 /* libglfw.3.2.dylib */; };
 		045C3E3D1ED99D4400870FC4 /* glslprogram.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 045C3E3B1ED99D4400870FC4 /* glslprogram.cpp */; };
 		045C3E411EDA789C00870FC4 /* controller.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 045C3E3F1EDA789C00870FC4 /* controller.cpp */; };
+		047FBAA01EF2D14A00A2A74A /* octree_manager.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 047FBA9E1EF2D14900A2A74A /* octree_manager.cpp */; };
+		047FBAA31EF2D19B00A2A74A /* photon_manager.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 047FBAA11EF2D19B00A2A74A /* photon_manager.cpp */; };
 		04941E871EEA319C00F29F5C /* voxelizer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 04941E851EEA319C00F29F5C /* voxelizer.cpp */; };
 		04941E8A1EEA3F1C00F29F5C /* voxelize.cl in Sources */ = {isa = PBXBuildFile; fileRef = 04941E891EEA3F1C00F29F5C /* voxelize.cl */; };
-		04941E8D1EEA6B4500F29F5C /* photonmanager.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 04941E8B1EEA6B4500F29F5C /* photonmanager.cpp */; };
 		04941E911EEA72A900F29F5C /* photonmarch.cl in Sources */ = {isa = PBXBuildFile; fileRef = 04941E901EEA72A900F29F5C /* photonmarch.cl */; };
 		04ACD1BA1EDD2526000789BA /* text2D.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 04ACD1B81EDD2526000789BA /* text2D.cpp */; };
 		04E68AEA1EDC42DE0044EA5E /* texture.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 04E68AE81EDC42DE0044EA5E /* texture.cpp */; };
@@ -38,6 +40,7 @@
 /* Begin PBXFileReference section */
 		041A0D5B1ED9915A002B4B84 /* refractiveObj */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = refractiveObj; sourceTree = BUILT_PRODUCTS_DIR; };
 		041A0D5E1ED9915A002B4B84 /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
+		04253B131EF2F96C0071467C /* octree.cl */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.opencl; path = octree.cl; sourceTree = "<group>"; };
 		045C3E2E1ED9941D00870FC4 /* render.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = render.cpp; sourceTree = "<group>"; };
 		045C3E2F1ED9941D00870FC4 /* render.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = render.hpp; sourceTree = "<group>"; };
 		045C3E311ED9961D00870FC4 /* model.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = model.cpp; sourceTree = "<group>"; };
@@ -50,12 +53,14 @@
 		045C3E3E1ED9B07C00870FC4 /* shader */ = {isa = PBXFileReference; lastKnownFileType = folder; path = shader; sourceTree = "<group>"; };
 		045C3E3F1EDA789C00870FC4 /* controller.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = controller.cpp; sourceTree = "<group>"; };
 		045C3E401EDA789C00870FC4 /* controller.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = controller.hpp; sourceTree = "<group>"; };
+		047FBA9E1EF2D14900A2A74A /* octree_manager.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = octree_manager.cpp; sourceTree = "<group>"; };
+		047FBA9F1EF2D14900A2A74A /* octree_manager.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = octree_manager.hpp; sourceTree = "<group>"; };
+		047FBAA11EF2D19B00A2A74A /* photon_manager.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = photon_manager.cpp; sourceTree = "<group>"; };
+		047FBAA21EF2D19B00A2A74A /* photon_manager.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = photon_manager.hpp; sourceTree = "<group>"; };
 		04941E851EEA319C00F29F5C /* voxelizer.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = voxelizer.cpp; sourceTree = "<group>"; };
 		04941E861EEA319C00F29F5C /* voxelizer.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = voxelizer.hpp; sourceTree = "<group>"; };
 		04941E881EEA326D00F29F5C /* main.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = main.hpp; sourceTree = "<group>"; };
 		04941E891EEA3F1C00F29F5C /* voxelize.cl */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.opencl; path = voxelize.cl; sourceTree = "<group>"; };
-		04941E8B1EEA6B4500F29F5C /* photonmanager.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = photonmanager.cpp; sourceTree = "<group>"; };
-		04941E8C1EEA6B4500F29F5C /* photonmanager.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = photonmanager.hpp; sourceTree = "<group>"; };
 		04941E901EEA72A900F29F5C /* photonmarch.cl */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.opencl; path = photonmarch.cl; sourceTree = "<group>"; };
 		04ACD1B81EDD2526000789BA /* text2D.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = text2D.cpp; sourceTree = "<group>"; };
 		04ACD1B91EDD2526000789BA /* text2D.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = text2D.hpp; sourceTree = "<group>"; };
@@ -99,8 +104,11 @@
 			isa = PBXGroup;
 			children = (
 				04941E901EEA72A900F29F5C /* photonmarch.cl */,
-				04941E8B1EEA6B4500F29F5C /* photonmanager.cpp */,
-				04941E8C1EEA6B4500F29F5C /* photonmanager.hpp */,
+				047FBAA11EF2D19B00A2A74A /* photon_manager.cpp */,
+				047FBAA21EF2D19B00A2A74A /* photon_manager.hpp */,
+				04253B131EF2F96C0071467C /* octree.cl */,
+				047FBA9E1EF2D14900A2A74A /* octree_manager.cpp */,
+				047FBA9F1EF2D14900A2A74A /* octree_manager.hpp */,
 				04941E891EEA3F1C00F29F5C /* voxelize.cl */,
 				04941E851EEA319C00F29F5C /* voxelizer.cpp */,
 				04941E861EEA319C00F29F5C /* voxelizer.hpp */,
@@ -192,9 +200,11 @@
 				041A0D5F1ED9915A002B4B84 /* main.cpp in Sources */,
 				04941E871EEA319C00F29F5C /* voxelizer.cpp in Sources */,
 				04941E8A1EEA3F1C00F29F5C /* voxelize.cl in Sources */,
+				047FBAA01EF2D14A00A2A74A /* octree_manager.cpp in Sources */,
 				045C3E301ED9941D00870FC4 /* render.cpp in Sources */,
+				04253B141EF2F96C0071467C /* octree.cl in Sources */,
+				047FBAA31EF2D19B00A2A74A /* photon_manager.cpp in Sources */,
 				045C3E411EDA789C00870FC4 /* controller.cpp in Sources */,
-				04941E8D1EEA6B4500F29F5C /* photonmanager.cpp in Sources */,
 				04E68AEA1EDC42DE0044EA5E /* texture.cpp in Sources */,
 				045C3E3D1ED99D4400870FC4 /* glslprogram.cpp in Sources */,
 				04ACD1BA1EDD2526000789BA /* text2D.cpp in Sources */,

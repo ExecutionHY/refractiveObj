@@ -218,31 +218,9 @@ void Render::loadPrograms() {
 	program_photon.uniformID_LightMVP = glGetUniformLocation(program_photon.programID, "lightMVP");
 }
 
-int Render::run() {
-	
-	// init controller
-    controller.init(window);
-	
-	// init programs
-	loadPrograms();
-	
-	// init models
-	loadModels();
+int Render::photonMapping() {
 	
 	
-	// voxelization
-	float t1 = glfwGetTime();
-	voxelizer.work(m_object.indexed_vertices, m_object.indices);
-	//voxelizer.print();
-	printf("Voxelization time = %6f s\n", glfwGetTime()-t1);
-	
-	
-	// init textures
-    bgTexture.loadBMP("background.bmp");
-	text2d.init("Holstein.DDS");
-	texture_skybox.loadCubeMap("river");
-	
-
 	// The framebuffer, which regroups 0, 1, or more textures, and 0 or 1 depth buffer.
 	glGenFramebuffers(1, &frameBuffer_photon);
 	glBindFramebuffer(GL_FRAMEBUFFER, frameBuffer_photon);
@@ -256,12 +234,9 @@ int Render::run() {
 	
 	// Always check that our framebuffer is ok
 	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
-		return false;
+	return -1;
 	
 	
-	
-	
-	t1 = glfwGetTime();
 	
 	// Render to our framebuffer
 	glBindFramebuffer(GL_FRAMEBUFFER, frameBuffer_photon);
@@ -284,7 +259,7 @@ int Render::run() {
 	
 	
 	// Compute the MVP matrix from the light's point of view
-	mat4 depthProjectionMatrix = ortho<float>(-0.4, 0.4, -0.4, 0.4, 0, 2);
+	mat4 depthProjectionMatrix = ortho<float>(-0.5, 0.5, -0.5, 0.5, 0, 2);
 	mat4 depthViewMatrix = lookAt(lightInvDir, vec3(0,0,0), vec3(1,0,0));
 	
 	// or, for spot light :
@@ -312,14 +287,50 @@ int Render::run() {
 	glDrawElements(GL_TRIANGLES, m_object.indices.size(), GL_UNSIGNED_SHORT, (void*)0);
 	
 	glDisableVertexAttribArray(0);
+	return 0;
+}
+
+int Render::run() {
 	
+	// init controller
+    controller.init(window);
+	
+	// init programs
+	loadPrograms();
+	
+	// init models
+	loadModels();
+	
+	
+	// voxelization
+	float t1 = glfwGetTime();
+	voxelizer.work(m_object.indexed_vertices, m_object.indices);
+	//voxelizer.print();
+	printf("Voxelization time = %6f s\n", glfwGetTime()-t1);
+	
+	
+	// octree construction
+	t1 = glfwGetTime();
+	octreeManager.construct();
+	printf("Octree construction time = %6f s\n", glfwGetTime()-t1);
+	
+	
+	// photon mapping
+	t1 = glfwGetTime();
+	photonMapping();
 	printf("Photon mapping time = %6f s\n", glfwGetTime()-t1);
 	
 	
+	// photon marching
 	t1 = glfwGetTime();
-	photonManager.generate(texture_photon.textureID);
+	photonManager.march(texture_photon.textureID);
 	printf("Photon marching time = %6f s\n", glfwGetTime()-t1);
 	
+	
+	// init textures
+	bgTexture.loadBMP("background.bmp");
+	text2d.init("Holstein.DDS");
+	texture_skybox.loadCubeMap("river");
 	texture_gradN.load3D(grad_n);
 	texture_radiance.load3D(radiance);
 	
@@ -331,23 +342,17 @@ int Render::run() {
 		glCullFace(GL_BACK); // Cull back-facing triangles -> draw only front-facing triangles
 		
 		
-		
-		
-		
-		
 		// Render to the screen
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 		glViewport(0, 0, FRAME_WIDTH, FRAME_HEIGHT); // Render on the whole framebuffer, complete from the lower left corner to the upper right
-		
-		glEnable(GL_CULL_FACE);
-		glCullFace(GL_BACK); // Cull back-facing triangles -> draw only front-facing triangles
 		
 		// Clear the screen
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		
 		
 		
-		// Draw skybox
+		//************* Draw skybox
+		
 		glUseProgram(program_sky.programID);
 		
 		glActiveTexture(GL_TEXTURE0);
@@ -364,7 +369,7 @@ int Render::run() {
 		
 		
 		
-        // Draw m_object
+        //************ Draw m_object
         
         // Use our shader
         glUseProgram(program_obj.programID);
@@ -408,7 +413,7 @@ int Render::run() {
 		
 		
 		
-        // Draw m_table
+        //************* Draw m_table
         
         // Use our shader
         glUseProgram(program_std.programID);
@@ -442,6 +447,7 @@ int Render::run() {
         glDisableVertexAttribArray(2);
 		
 		
+		//************** draw text
 		
         char text[256];
         sprintf(text,"fps: %.2f, time: %.2f s", controller.fps, glfwGetTime());
@@ -456,7 +462,6 @@ int Render::run() {
     while( glfwGetKey(window, GLFW_KEY_ESCAPE ) != GLFW_PRESS &&
           glfwWindowShouldClose(window) == 0 );
 
-	
 	
 	
     return 0;

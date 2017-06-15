@@ -1,33 +1,18 @@
 //
-//  photonmanager.cpp
+//  photon_manager.cpp
 //  refractiveObj
 //
 //  Created by Execution on 09/06/2017.
 //  Copyright © 2017 Execution. All rights reserved.
 //
 
-#include "photonmanager.hpp"
+#include "photon_manager.hpp"
 float rx[VOXEL_CNT*VOXEL_CNT*VOXEL_CNT];
 float ry[VOXEL_CNT*VOXEL_CNT*VOXEL_CNT];
 float rz[VOXEL_CNT*VOXEL_CNT*VOXEL_CNT];
 
 PhotonManager::PhotonManager() {}
 PhotonManager::~PhotonManager() {}
-
-void PhotonManager::generate(GLuint textureID_photonmap) {
-	this->textureID_photonmap = textureID_photonmap;
-	march_init();
-	march_share();
-	march_execute();
-	march_blur();
-	march_release();
-}
-
-
-#define _CRT_SECURE_NO_WARNINGS
-#define PROGRAM_FILE "photonmarch.cl"
-#define KERNEL_FUNC "photonmarch"
-#define KERNEL_FUNC2 "radianceblur"
 
 float * createBlurMask(float sigma, int * maskSizePointer) {
 	int maskSize = (int)ceil(3.0f*sigma);
@@ -44,15 +29,44 @@ float * createBlurMask(float sigma, int * maskSizePointer) {
 	}
 	// Normalize the mask
 	for(int i = 0; i < (maskSize*2+1)*(maskSize*2+1)*(maskSize*2+1); i++)
-		mask[i] = mask[i] / sum;
+	mask[i] = mask[i] / sum;
  
 	*maskSizePointer = maskSize;
  
 	return mask;
 }
 
-int PhotonManager::march_init() {
+
+#define _CRT_SECURE_NO_WARNINGS
+#define PROGRAM_FILE "photonmarch.cl"
+#define KERNEL_FUNC "photonmarch"
+#define KERNEL_FUNC2 "radianceblur"
+
+
+int PhotonManager::march(GLuint textureID_photonmap) {
 	
+	/* Host/device data structures */
+	cl_platform_id platform;
+	cl_device_id device;
+	cl_context context;
+	cl_command_queue queue;
+	cl_int err;
+	
+	/* Program/kernel data structures */
+	cl_program program;
+	FILE *program_handle;
+	char *program_buffer, *program_log;
+	size_t program_size, log_size;
+	cl_kernel kernel;
+	
+	/* Data and buffers */
+	cl_int voxel_3 = VOXEL_CNT*VOXEL_CNT*VOXEL_CNT;
+	cl_mem map_buff, gradn_buff, matrix_buff,rx_buff, ry_buff, rz_buff;
+	size_t work_units_per_kernel;
+	
+	cl_mem input_buff, output_buff, radiance_buff, mask_buff;
+	int maskSize;
+	vec3 lightPos;
 	
 	/* Identify a platform */
 	err = clGetPlatformIDs(1, &platform, NULL);
@@ -115,7 +129,7 @@ int PhotonManager::march_init() {
 	
 	/* Build program */
 	err = clBuildProgram(program, 0, NULL, NULL, NULL, NULL);
-	if(err < 0) {
+	if(1) {
 		
 		/* Find size of log and print to std output */
 		clGetProgramBuildInfo(program, device, CL_PROGRAM_BUILD_LOG,
@@ -126,7 +140,7 @@ int PhotonManager::march_init() {
 							  log_size + 1, program_log, NULL);
 		printf("Build program %d: %s\n", err, program_log);
 		free(program_log);
-		exit(1);
+		//exit(1);
 	}
 	
 	/* Create a CL command queue for the device*/
@@ -137,19 +151,13 @@ int PhotonManager::march_init() {
 	}
 	
 	
-	return 0;
-}
-
-int PhotonManager::march_share() {
-	
-	
 	/* Create CL buffers to hold input and output data */
 	map_buff = clCreateFromGLTexture(context, CL_MEM_READ_ONLY, GL_TEXTURE_2D, 0, textureID_photonmap, &err);
 	if(err < 0) {
 		perror("Couldn't create a buffer object");
 		exit(1);
 	}
-	gradN_buff = clCreateBuffer(context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, sizeof(vec4)*VOXEL_CNT*VOXEL_CNT*VOXEL_CNT, &grad_n[0], &err);
+	gradn_buff = clCreateBuffer(context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, sizeof(vec4)*VOXEL_CNT*VOXEL_CNT*VOXEL_CNT, &grad_n[0], &err);
 	if(err < 0) {
 		printf("%d ", err);
 		perror("Couldn't create a buffer object 2");
@@ -169,12 +177,9 @@ int PhotonManager::march_share() {
 	float* mask = createBlurMask(2.0f, &maskSize);
 	mask_buff = clCreateBuffer(context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, sizeof(float)*(2*maskSize+1)*(2*maskSize+1)*(2*maskSize+1), mask, NULL);
 	
-	return 0;
-}
-
-int PhotonManager::march_execute() {
 	
-	/* Create kernel for the mat_vec_mult function */
+	//************ marching
+	
 	kernel = clCreateKernel(program, KERNEL_FUNC, &err);
 	if(err < 0) {
 		perror("Couldn't create the kernel");
@@ -190,7 +195,7 @@ int PhotonManager::march_execute() {
 	}
 	clSetKernelArg(kernel, 1, sizeof(cl_int), &MAP_WIDTH);
 	clSetKernelArg(kernel, 2, sizeof(cl_int), &MAP_HEIGHT);
-	clSetKernelArg(kernel, 3, sizeof(cl_mem), &gradN_buff);
+	clSetKernelArg(kernel, 3, sizeof(cl_mem), &gradn_buff);
 	int voxel_cnt = VOXEL_CNT;
 	clSetKernelArg(kernel, 4, sizeof(cl_int), &voxel_cnt);
 	clSetKernelArg(kernel, 5, sizeof(cl_float3), &lightPos);
@@ -251,11 +256,7 @@ int PhotonManager::march_execute() {
 	*/
 
 	
-	
-	return 0;
-}
-
-int PhotonManager::march_blur() {
+	//************* blur
 	
 	kernel = clCreateKernel(program, KERNEL_FUNC2, &err);
 	if(err < 0) {
@@ -269,7 +270,6 @@ int PhotonManager::march_blur() {
 	err |= clSetKernelArg(kernel, 3, sizeof(cl_mem), &radiance_buff);
 	err |= clSetKernelArg(kernel, 4, sizeof(cl_mem), &mask_buff);
 	err |= clSetKernelArg(kernel, 5, sizeof(cl_int), &maskSize);
-	int voxel_cnt = VOXEL_CNT;
 	err |= clSetKernelArg(kernel, 6, sizeof(cl_int), &voxel_cnt);
 	if(err < 0) {
 		printf("%d ", err);
@@ -308,13 +308,10 @@ int PhotonManager::march_blur() {
 					   radiance[i*VOXEL_CNT*VOXEL_CNT+j*VOXEL_CNT+k].z);
 			}
 	 */
-	return 0;
-}
-
-int PhotonManager::march_release() {
+	
 	/* Deallocate resources */
 	clReleaseMemObject(map_buff);
-	clReleaseMemObject(gradN_buff);
+	clReleaseMemObject(gradn_buff);
 	clReleaseMemObject(rx_buff);
 	clReleaseMemObject(ry_buff);
 	clReleaseMemObject(rz_buff);
