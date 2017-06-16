@@ -28,6 +28,7 @@ public:
 	GLuint uniformID_RefIndex;
 	GLuint uniformID_GradN;
 	GLuint uniformID_Radiance;
+	GLuint uniformID_Table;
     GLuint uniformID_Camera;
 	GLuint uniformID_Vcnt;
 	

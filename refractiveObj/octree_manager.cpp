@@ -131,6 +131,7 @@ int OctreeManager::construct() {
 	// Create kernel arguments from the CL buffers
 	err = clSetKernelArg(kernel, 0, sizeof(cl_mem), &gradn_buff);
 	err |= clSetKernelArg(kernel, 1, sizeof(cl_mem), &temp_buff);
+	//err |= clSetKernelArg(kernel, 2, sizeof(cl_mem), &octree_buff);
 	if(err < 0) {
 		perror("Couldn't set the kernel argument");
 		exit(1);
@@ -193,14 +194,14 @@ int OctreeManager::construct() {
 	}
 	
 	
-	
+	/*
 	 for (int i = 0; i < VOXEL_CNT; i++)
 		for (int j = 0; j < VOXEL_CNT; j++)
 			for (int k = 0; k < VOXEL_CNT; k++) {
 				int index = i*VOXEL_CNT*VOXEL_CNT+j*VOXEL_CNT+k;
 				printf("i:%3d, j:%3d, k:%3d L %d\n",i,j,k, octree[index]);
 	 }
-	
+	*/
 	
 	/* Deallocate resources */
 	clReleaseMemObject(gradn_buff);

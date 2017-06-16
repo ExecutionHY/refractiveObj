@@ -38,10 +38,14 @@ extern int MAP_WIDTH;
 extern int MAP_HEIGHT;
 // voxelizer
 #define VOXEL_CNT 128
+extern float refConst;
 // vec4(gradx, grady, gradz, n)
 extern vec4 grad_n[VOXEL_CNT*VOXEL_CNT*VOXEL_CNT];
 extern vec4 radiance[VOXEL_CNT*VOXEL_CNT*VOXEL_CNT];
 extern int octree[VOXEL_CNT*VOXEL_CNT*VOXEL_CNT];
+extern vec4 table[1024*1024];
 
+float * createBlurMask2D(float sigma, int * maskSizePointer);
+float * createBlurMask3D(float sigma, int * maskSizePointer);
 
 #endif /* main_hpp */

@@ -97,7 +97,10 @@ __kernel void voxelize(__global ushort* indices,
 	if (intersectCnt % 2 == 1) refIndex[i] = refConst;
 	else refIndex[i] = 1.0f;
 	*/
-	if (distance(pos, (float3)(0, 0.5, 0)) < 0.4f) refIndex[i] = refConst;
+	float3 pos1 = (float3)(-0.3, 0.3, 0);
+	float3 pos2 = (float3)(0.5, -0.6, 0);
+	
+	if (distance(pos, pos1) < 0.4f || distance(pos, pos2) < 0.2f) refIndex[i] = refConst;
 	else refIndex[i] = 1.0f;
 	
 	// part2 - super-sample those border voxels
@@ -111,7 +114,7 @@ __kernel void voxelize(__global ushort* indices,
 			for (float b = -0.375; b <= 0.375; b += 0.25) {
 				for (float c = -0.375; c <= 0.375; c += 0.25) {
 					float3 newPos = pos + float3(a, b, c)*voxel_width;
-					if (distance(newPos, (float3)(0, 0.5, 0)) < 0.4f) refIndex[i] += refConst/64.0f;
+					if (distance(newPos, pos1) < 0.4f || distance(newPos, pos2) < 0.2f) refIndex[i] += refConst/64.0f;
 					else refIndex[i] += 1.0f/64.0f;
 					/*
 					int intersectCnt = 0;
@@ -187,9 +190,9 @@ __kernel void gradient(__global float* refIndex,
 		gradn[i] = (float4)(0.0f, 0.0f, 0.0f, refIndex[i]);
 	}
 	else {
-		gradn[i] = (float4)(refIndex[i+voxel_cnt*voxel_cnt] - refIndex[i],
-							refIndex[i+voxel_cnt] - refIndex[i],
-							refIndex[i+1] - refIndex[i],
+		gradn[i] = (float4)((refIndex[i+voxel_cnt*voxel_cnt] - refIndex[i-voxel_cnt*voxel_cnt])/2.0f,
+							(refIndex[i+voxel_cnt] - refIndex[i-voxel_cnt])/2.0f,
+							(refIndex[i+1] - refIndex[i-1])/2.0f,
 							refIndex[i]);
 	}
 }

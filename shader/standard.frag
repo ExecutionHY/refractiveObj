@@ -8,22 +8,24 @@ in vec3 EyeDirection_cameraspace;
 in vec3 LightDirection_cameraspace;
 
 // Ouput data
-out vec3 color;
+out vec4 color;
 
 // Values that stay constant for the whole mesh.
 uniform sampler2D myTextureSampler;
+uniform sampler2D radiance;
 uniform mat4 MV;
 uniform vec3 LightPosition_worldspace;
+uniform int voxel_cnt;
 
 void main(){
     
     // Light emission properties
     // You probably want to put them as uniforms
     vec3 LightColor = vec3(1,1,1);
-    float LightPower = 50.0f;
+    float LightPower = 100.0f;
     
     // Material properties
-    vec3 MaterialDiffuseColor = texture(myTextureSampler, UV).arg;
+    vec3 MaterialDiffuseColor = texture(myTextureSampler, UV).rgb;
     vec3 MaterialAmbientColor = vec3(0.1,0.1,0.1) * MaterialDiffuseColor;
     vec3 MaterialSpecularColor = vec3(0.3,0.3,0.3);
     
@@ -50,13 +52,21 @@ void main(){
     //  - Looking into the reflection -> 1
     //  - Looking elsewhere -> < 1
     float cosAlpha = clamp( dot( E,R ), 0,1 );
-    
-    color =
+	
+	
+	vec3 rad = texture(radiance, (Position_worldspace.xz+vec2(1,1))*0.5).rgb;
+	//if (voxel == 128) rad = vec3(1,0,0);
+	
+	//rad = vec3(1, 1, 1);
+	
+    vec3 c =
     // Ambient : simulates indirect lighting
     MaterialAmbientColor +
     // Diffuse : "color" of the object
-    MaterialDiffuseColor * LightColor * LightPower * cosTheta / (distance*distance) +
+    MaterialDiffuseColor * rad * LightPower * cosTheta / (distance*distance) +
     // Specular : reflective highlight, like a mirror
-    MaterialSpecularColor * LightColor * LightPower * pow(cosAlpha,5) / (distance*distance);
+    MaterialSpecularColor * rad * LightPower * pow(cosAlpha,5) / (distance*distance);
+	
+	color = vec4(c, 1.0f);
     
 }

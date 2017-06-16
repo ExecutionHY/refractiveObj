@@ -35,10 +35,11 @@ private:
 	Model m_box;
 	void loadModels();
 	
-	Texture bgTexture;
 	Texture texture_skybox;
 	Texture texture_gradN;
 	Texture texture_radiance;
+	Texture texture_table;
+	Texture texture_tableR;
 	GLuint frameBuffer_photon;
 	Texture texture_photon;
 	

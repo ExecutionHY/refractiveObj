@@ -6,6 +6,7 @@ __kernel void init(__global float4* gradn,
 	int i = get_global_id(0);
 	// min, max
 	temp[i] = (float2)(gradn[i].w, gradn[i].w);
+	//octree[i] = 1;
 }
 
 __kernel void construct(__global float2* temp,
@@ -36,7 +37,7 @@ __kernel void construct(__global float2* temp,
 				for (int b = 0; b < explevel; b++)
 					for (int c = 0; c < explevel; c++) {
 						int index = i + a*voxel_cnt*voxel_cnt+b*voxel_cnt+c;
-						octree[index] = level;
+						octree[index] = explevel;
 					}
 		}
 	}

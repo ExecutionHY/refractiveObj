@@ -6,12 +6,13 @@ in vec3 Position_worldspace;
 in vec3 EyeDirection_worldspace;
 
 // Ouput data
-out vec3 color;
+out vec4 color;
 
 // Values that stay constant for the whole mesh.
 uniform sampler3D radianceDistribution;
 uniform sampler3D grad_n;
 uniform samplerCube CubeMap;
+uniform sampler2D table;
 uniform int voxel_cnt;
 
 vec3 bgpos(vec3 pos, vec3 dir) {
@@ -35,35 +36,62 @@ void main(){
 	// initial direction
 	vec3 dir = normalize(EyeDirection_worldspace);
 	// pos: x_i, npos: x_{i+1}
-	vec3 pos = Position_worldspace - dir*stepSize*3, npos;
+	vec3 pos = Position_worldspace + dir*stepSize*10;
 	// v: v_i, nv: v_{i+1}
 	// v0 = n*dir
 	float n = texture(grad_n, (pos+vec3(1,1,1))*0.5).a + 1.0f;
-	vec3 v = n*dir, nv;
+	vec3 v = n*dir;
 	
 	float cnt = 0.00; // for debug
 	vec3 gradn;
 	float gradnx, gradny, gradnz;
 	
-    for (int i = 0; i < voxel_cnt+3; i++) {
+	bool isObj = false;
+	
+    for (int i = 0; i < voxel_cnt; i++) {
 		// only focus on a cube
-		if (abs(pos.x) >= 1 || abs(pos.y) >= 1 || abs(pos.z) >= 1)
-			if (i > voxel_cnt / 3) break;
-		//if (n < 1 + EPSILON && i > voxel_cnt/3) break;
-		n = texture(grad_n, (pos+vec3(1,1,1))*0.5).a + 1.0f;
-		npos = pos + stepSize / n * v;
-		gradn = texture(grad_n, (pos+vec3(1,1,1))*0.5).rgb;
-		nv = v + gradn;
-		// sum up radiance
-		radiance += texture(radianceDistribution, (pos+vec3(1,1,1))*0.5).rgb;
+		if (abs(pos.x) >= 1-EPSILON || abs(pos.y) >= 1-EPSILON || abs(pos.z) >= 1-EPSILON) // TODO: too much operation
+			break;
 		
-		pos = npos;
-		v = nv;
-		//dir = normalize(v);
+		vec3 uv = (pos+vec3(1,1,1))*0.5;
+		
+		//if (n < 1 + EPSILON && i > voxel_cnt/3) break;
+		n = texture(grad_n, uv).a + 1.0f;
+		if (n > 1+EPSILON) isObj = true;
+		pos += stepSize / n * v;
+		v += texture(grad_n, uv).rgb;
+
+		// sum up radiance
+		radiance += texture(radianceDistribution, uv).rgb;
+		
 	}
 	
-	// direction * 10
-	color = radiance + texture(CubeMap, bgpos(pos, normalize(v))).rgb;
+	if (isObj) {
+		color = vec4(radiance + texture(CubeMap, bgpos(pos, normalize(v))).rgb, 1.0f);
+	}
+	else {
+		if (length(radiance) > 0.01) color = vec4(radiance, 0);
+		else color = vec4(0,0,0,0);
+	}
 	
+	/*
+	bool isTable = false;
+	vec3 p;
+	if (dir.y < -EPSILON) {
+		float steps = (-1-Position_worldspace.y) / dir.y;
+		p = Position_worldspace + dir * steps;
+		if (abs(p.x) < 1+EPSILON && abs(p.z) < 1+EPSILON)
+			isTable = true;
+	}
+
+	if (isTable) {
+		vec3 tablecolor = texture(table, (p.xz+vec2(1,1))*0.5).rgb;
+		vec3 light = texture(radianceDistribution, (p+vec3(1,1,1))*0.5).rgb;
+		color = radiance + vec3(tablecolor.r*light.r*100, tablecolor.g*light.g*100, tablecolor.b*light.b*100);
+		//if (light.b > 0.5) color.b = 1.0f;
+	}
+	else
+		color = radiance + texture(CubeMap, bgpos(pos, normalize(v))).rgb;
 	
+	*/
 }

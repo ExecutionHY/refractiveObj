@@ -41,27 +41,6 @@ void Voxelizer::print() {
 #define KERNEL_FUNC2 "blur"
 #define KERNEL_FUNC3 "gradient"
 
-float * createBlurMask3D(float sigma, int * maskSizePointer) {
-	int maskSize = (int)ceil(3.0f*sigma);
-	float * mask = new float[(maskSize*2+1)*(maskSize*2+1)*(maskSize*2+1)];
-	float sum = 0.0f;
-	for(int a = -maskSize; a <= maskSize; a++) {
-		for(int b = -maskSize; b <= maskSize; b++) {
-			for (int c = -maskSize; c <= maskSize; c++) {
-				float temp = exp(-((float)(a*a+b*b+c*c) / (2*sigma*sigma)));
-				sum += temp;
-				mask[(a+maskSize)*(maskSize*2+1)*(maskSize*2+1)+(b+maskSize)*(maskSize*2+1)+(c+maskSize)] = temp;
-			}
-		}
-	}
-	// Normalize the mask
-	for(int i = 0; i < (maskSize*2+1)*(maskSize*2+1)*(maskSize*2+1); i++)
-		mask[i] = mask[i] / sum;
- 
-	*maskSizePointer = maskSize;
- 
-	return mask;
-}
 
 
 int Voxelizer::voxelize_CL(vector<vec3> & indexed_vertices,
@@ -86,7 +65,6 @@ int Voxelizer::voxelize_CL(vector<vec3> & indexed_vertices,
 	cl_mem indices_buff, vertices_buff, refIndex_buff,
 		gradn_buff, blured_buff, mask_buff;
 	size_t work_units_per_kernel;
-	float refConst = 1.25f;
 	
 	/* Identify a platform */
 	err = clGetPlatformIDs(1, &platform, NULL);

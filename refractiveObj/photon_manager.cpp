@@ -14,33 +14,12 @@ float rz[VOXEL_CNT*VOXEL_CNT*VOXEL_CNT];
 PhotonManager::PhotonManager() {}
 PhotonManager::~PhotonManager() {}
 
-float * createBlurMask(float sigma, int * maskSizePointer) {
-	int maskSize = (int)ceil(3.0f*sigma);
-	float * mask = new float[(maskSize*2+1)*(maskSize*2+1)*(maskSize*2+1)];
-	float sum = 0.0f;
-	for(int a = -maskSize; a <= maskSize; a++) {
-		for(int b = -maskSize; b <= maskSize; b++) {
-			for (int c = -maskSize; c <= maskSize; c++) {
-				float temp = exp(-((float)(a*a+b*b+c*c) / (2*sigma*sigma)));
-				sum += temp;
-				mask[(a+maskSize)*(maskSize*2+1)*(maskSize*2+1)+(b+maskSize)*(maskSize*2+1)+(c+maskSize)] = temp;
-			}
-		}
-	}
-	// Normalize the mask
-	for(int i = 0; i < (maskSize*2+1)*(maskSize*2+1)*(maskSize*2+1); i++)
-	mask[i] = mask[i] / sum;
- 
-	*maskSizePointer = maskSize;
- 
-	return mask;
-}
-
 
 #define _CRT_SECURE_NO_WARNINGS
 #define PROGRAM_FILE "photonmarch.cl"
 #define KERNEL_FUNC "photonmarch"
-#define KERNEL_FUNC2 "radianceblur"
+#define KERNEL_FUNC2 "tableradiance"
+#define KERNEL_FUNC3 "radianceblur"
 
 
 int PhotonManager::march(GLuint textureID_photonmap) {
@@ -64,8 +43,8 @@ int PhotonManager::march(GLuint textureID_photonmap) {
 	cl_mem map_buff, gradn_buff, matrix_buff,rx_buff, ry_buff, rz_buff;
 	size_t work_units_per_kernel;
 	
-	cl_mem input_buff, output_buff, radiance_buff, mask_buff;
-	int maskSize;
+	cl_mem input_buff, output_buff, radiance_buff, mask_buff, mask_buff2, octree_buff, table_buff;
+	int maskSize, maskSize2;
 	vec3 lightPos;
 	
 	/* Identify a platform */
@@ -157,14 +136,14 @@ int PhotonManager::march(GLuint textureID_photonmap) {
 		perror("Couldn't create a buffer object");
 		exit(1);
 	}
-	gradn_buff = clCreateBuffer(context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, sizeof(vec4)*VOXEL_CNT*VOXEL_CNT*VOXEL_CNT, &grad_n[0], &err);
+	gradn_buff = clCreateBuffer(context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, sizeof(vec4)*VOXEL_CNT*VOXEL_CNT*VOXEL_CNT, grad_n, &err);
 	if(err < 0) {
 		printf("%d ", err);
 		perror("Couldn't create a buffer object 2");
 		exit(1);
 	}
 	
-	lightPos = vec3(0,2,0);
+	lightPos = vec3(0,10,0);
 	rx_buff = clCreateBuffer(context, CL_MEM_READ_WRITE,
 							 sizeof(cl_float)*VOXEL_CNT*VOXEL_CNT*VOXEL_CNT, NULL, NULL);
 	ry_buff = clCreateBuffer(context, CL_MEM_READ_WRITE,
@@ -172,10 +151,16 @@ int PhotonManager::march(GLuint textureID_photonmap) {
 	rz_buff = clCreateBuffer(context, CL_MEM_READ_WRITE,
 							 sizeof(cl_float)*VOXEL_CNT*VOXEL_CNT*VOXEL_CNT, NULL, NULL);
 	radiance_buff = clCreateBuffer(context, CL_MEM_WRITE_ONLY,
-							 sizeof(vec4)*VOXEL_CNT*VOXEL_CNT*VOXEL_CNT, NULL, NULL);
+								   sizeof(vec4)*VOXEL_CNT*VOXEL_CNT*VOXEL_CNT, NULL, NULL);
+	octree_buff = clCreateBuffer(context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
+								 sizeof(int)*VOXEL_CNT*VOXEL_CNT*VOXEL_CNT, octree, NULL);
+	table_buff = clCreateBuffer(context, CL_MEM_WRITE_ONLY,
+								   sizeof(vec4)*MAP_WIDTH*MAP_WIDTH, NULL, NULL);
 	
-	float* mask = createBlurMask(2.0f, &maskSize);
+	float* mask = createBlurMask3D(2.0f, &maskSize);
 	mask_buff = clCreateBuffer(context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, sizeof(float)*(2*maskSize+1)*(2*maskSize+1)*(2*maskSize+1), mask, NULL);
+	float* mask2 = createBlurMask2D(2.0f, &maskSize2);
+	mask_buff2 = clCreateBuffer(context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, sizeof(float)*(2*maskSize2+1)*(2*maskSize2+1), mask2, NULL);
 	
 	
 	//************ marching
@@ -202,6 +187,7 @@ int PhotonManager::march(GLuint textureID_photonmap) {
 	clSetKernelArg(kernel, 6, sizeof(cl_mem), &rx_buff);
 	clSetKernelArg(kernel, 7, sizeof(cl_mem), &ry_buff);
 	clSetKernelArg(kernel, 8, sizeof(cl_mem), &rz_buff);
+	clSetKernelArg(kernel, 9, sizeof(cl_mem), &octree_buff);
 	
 	
 	glFinish();
@@ -232,12 +218,7 @@ int PhotonManager::march(GLuint textureID_photonmap) {
 		perror("Couldn't enqueue the read buffer command");
 		exit(1);
 	}
-	*/
-	clEnqueueReleaseGLObjects(queue, 1, &map_buff, 0, 0, 0);
-	//clFinish(queue);
-	clReleaseKernel(kernel);
-	
-	/*
+
 	for (int i = 0; i < VOXEL_CNT; i++)
 	for (int j = 0; j < VOXEL_CNT; j++)
 	for (int k = 0; k < VOXEL_CNT; k++) {
@@ -254,11 +235,58 @@ int PhotonManager::march(GLuint textureID_photonmap) {
 			   radiance[i*VOXEL_CNT*VOXEL_CNT+j*VOXEL_CNT+k].z);
 	}
 	*/
-
+	
+	clEnqueueReleaseGLObjects(queue, 1, &map_buff, 0, 0, 0);
+	//clFinish(queue);
+	clReleaseKernel(kernel);
+	
+	
+	
+	//************* table
+	
+	kernel = clCreateKernel(program, KERNEL_FUNC2, &err);
+	if(err < 0) {
+		perror("Couldn't create the kernel");
+		exit(1);
+	}
+	/* Create kernel arguments from the CL buffers */
+	err = clSetKernelArg(kernel, 0, sizeof(cl_mem), &rx_buff);
+	err |= clSetKernelArg(kernel, 1, sizeof(cl_mem), &ry_buff);
+	err |= clSetKernelArg(kernel, 2, sizeof(cl_mem), &rz_buff);
+	err |= clSetKernelArg(kernel, 3, sizeof(cl_mem), &table_buff);
+	err |= clSetKernelArg(kernel, 4, sizeof(cl_int), &voxel_cnt);
+	err |= clSetKernelArg(kernel, 5, sizeof(cl_int), &MAP_WIDTH);
+	err |= clSetKernelArg(kernel, 6, sizeof(cl_mem), &mask_buff2);
+	err |= clSetKernelArg(kernel, 7, sizeof(cl_int), &maskSize2);
+	if(err < 0) {
+		printf("%d ", err);
+		perror("Couldn't set the kernel argument");
+		exit(1);
+	}
+	
+	
+	/* Enqueue the command queue to the device */
+	work_units_per_kernel = MAP_WIDTH * MAP_WIDTH;
+	// global_work_size cannot exceed the range given by the sizeof(size_t)
+	err = clEnqueueNDRangeKernel(queue, kernel, 1, NULL, &work_units_per_kernel, NULL, 0, NULL, NULL);
+	if(err < 0) {
+		perror("Couldn't enqueue the kernel execution command");
+		exit(1);
+	}
+	clReleaseKernel(kernel);
+	
+	/* Read the result */
+	err = clEnqueueReadBuffer(queue, table_buff, CL_TRUE, 0, sizeof(vec4)*MAP_WIDTH*MAP_WIDTH, table, 0, NULL, NULL);
+	if(err < 0) {
+		printf("%d ", err);
+		perror("Couldn't enqueue the read buffer command");
+		exit(1);
+	}
+	
 	
 	//************* blur
 	
-	kernel = clCreateKernel(program, KERNEL_FUNC2, &err);
+	kernel = clCreateKernel(program, KERNEL_FUNC3, &err);
 	if(err < 0) {
 		perror("Couldn't create the kernel");
 		exit(1);
@@ -270,7 +298,9 @@ int PhotonManager::march(GLuint textureID_photonmap) {
 	err |= clSetKernelArg(kernel, 3, sizeof(cl_mem), &radiance_buff);
 	err |= clSetKernelArg(kernel, 4, sizeof(cl_mem), &mask_buff);
 	err |= clSetKernelArg(kernel, 5, sizeof(cl_int), &maskSize);
-	err |= clSetKernelArg(kernel, 6, sizeof(cl_int), &voxel_cnt);
+	err |= clSetKernelArg(kernel, 6, sizeof(cl_mem), &mask_buff2);
+	err |= clSetKernelArg(kernel, 7, sizeof(cl_int), &maskSize2);
+	err |= clSetKernelArg(kernel, 8, sizeof(cl_int), &voxel_cnt);
 	if(err < 0) {
 		printf("%d ", err);
 		perror("Couldn't set the kernel argument");
@@ -286,6 +316,7 @@ int PhotonManager::march(GLuint textureID_photonmap) {
 		perror("Couldn't enqueue the kernel execution command");
 		exit(1);
 	}
+	clReleaseKernel(kernel);
 	
 	
 	/* Read the result */
@@ -295,7 +326,6 @@ int PhotonManager::march(GLuint textureID_photonmap) {
 		perror("Couldn't enqueue the read buffer command");
 		exit(1);
 	}
-	clReleaseKernel(kernel);
 	
 	/*
 	for (int i = 0; i < VOXEL_CNT; i++)

@@ -23,6 +23,7 @@ public:
 	
 	void loadCubeMap(const char * mapname);
 	void load3D(vec4 arr[]);
+	void load2D(vec4 arr[]);
 	void initDepth();
 	
     GLuint textureID;

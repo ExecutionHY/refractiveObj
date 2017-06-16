@@ -176,7 +176,7 @@ void Render::loadModels() {
 }
 
 void Render::loadPrograms() {
-	// program for background
+	// program for table
 	if (program_std.initShader( "standard.vert", "standard.frag", NULL ) == false) {
 		getchar();
 		exit(-1);
@@ -188,6 +188,8 @@ void Render::loadPrograms() {
 	program_std.uniformID_Model = glGetUniformLocation(program_std.programID, "M");
 	program_std.uniformID_Light = glGetUniformLocation(program_std.programID, "LightPosition_worldspace");
 	program_std.uniformID_Texture  = glGetUniformLocation(program_std.programID, "myTextureSampler");
+	program_std.uniformID_Radiance  = glGetUniformLocation(program_std.programID, "radiance");
+	program_std.uniformID_Vcnt = glGetUniformLocation(program_std.programID, "voxel_cnt");
 	
 	// program for object
 	if (program_obj.initShader("object.vert", "object.frag", NULL) == false) {
@@ -201,6 +203,7 @@ void Render::loadPrograms() {
 	program_obj.uniformID_Radiance = glGetUniformLocation(program_obj.programID, "radianceDistribution");
 	program_obj.uniformID_GradN = glGetUniformLocation(program_obj.programID, "grad_n");
 	program_obj.uniformID_CubeMap = glGetUniformLocation(program_obj.programID, "CubeMap");
+	program_obj.uniformID_Table = glGetUniformLocation(program_obj.programID, "table");
 	program_obj.uniformID_Vcnt = glGetUniformLocation(program_obj.programID, "voxel_cnt");
 	
 	// program for skybox
@@ -259,7 +262,7 @@ int Render::photonMapping() {
 	
 	
 	// Compute the MVP matrix from the light's point of view
-	mat4 depthProjectionMatrix = ortho<float>(-0.5, 0.5, -0.5, 0.5, 0, 2);
+	mat4 depthProjectionMatrix = ortho<float>(-1.0, 1.0, -1.0, 1.0, 0, 2);
 	mat4 depthViewMatrix = lookAt(lightInvDir, vec3(0,0,0), vec3(1,0,0));
 	
 	// or, for spot light :
@@ -301,9 +304,14 @@ int Render::run() {
 	// init models
 	loadModels();
 	
+	// init textures
+	text2d.init("Holstein.DDS");
+	texture_skybox.loadCubeMap("river");
+	texture_table.loadBMP("marble.bmp");
 	
 	// voxelization
 	float t1 = glfwGetTime();
+	//vec3 pos =
 	voxelizer.work(m_object.indexed_vertices, m_object.indices);
 	//voxelizer.print();
 	printf("Voxelization time = %6f s\n", glfwGetTime()-t1);
@@ -326,17 +334,17 @@ int Render::run() {
 	photonManager.march(texture_photon.textureID);
 	printf("Photon marching time = %6f s\n", glfwGetTime()-t1);
 	
-	
-	// init textures
-	bgTexture.loadBMP("background.bmp");
-	text2d.init("Holstein.DDS");
-	texture_skybox.loadCubeMap("river");
 	texture_gradN.load3D(grad_n);
 	texture_radiance.load3D(radiance);
+	texture_tableR.load2D(table);
 	
-	 
+	
+	
 	do {
+		float frameStart = glfwGetTime();
+		
 		controller.update();
+		
 		
 		glEnable(GL_CULL_FACE);
 		glCullFace(GL_BACK); // Cull back-facing triangles -> draw only front-facing triangles
@@ -368,9 +376,49 @@ int Render::run() {
 		glDrawArrays(GL_TRIANGLES, 0, 36);
 		
 		
+		//************* Draw m_table
+		
+		// Use our shader
+		glUseProgram(program_std.programID);
+		
+		glUniformMatrix4fv(program_std.uniformID_View, 1, GL_FALSE, &controller.View[0][0]);
+		glUniformMatrix4fv(program_std.uniformID_Model, 1, GL_FALSE, &controller.Model_table[0][0]);
+		glUniformMatrix4fv(program_std.uniformID_MVP, 1, GL_FALSE, &controller.MVP_table[0][0]);
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, texture_table.textureID);
+		glUniform1i(program_std.uniformID_Texture, 0);
+		glActiveTexture(GL_TEXTURE1);
+		glBindTexture(GL_TEXTURE_2D, texture_tableR.textureID);
+		glUniform1i(program_std.uniformID_Radiance, 1);
+		
+		glUniform1i(program_std.uniformID_Vcnt, VOXEL_CNT);
+		glUniform3f(program_std.uniformID_Light, controller.lightPos.x, controller.lightPos.y, controller.lightPos.z);
+		
+		// attribute buffer
+		glEnableVertexAttribArray(0);
+		glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer_table);
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
+		glEnableVertexAttribArray(1);
+		glBindBuffer(GL_ARRAY_BUFFER, uvbuffer_table);
+		glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, (void*)0);
+		glEnableVertexAttribArray(2);
+		glBindBuffer(GL_ARRAY_BUFFER, normalbuffer_table);
+		glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
+		// Index buffer
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, elementbuffer_table);
+		
+		glDrawElements(GL_TRIANGLES, m_table.indices.size(), GL_UNSIGNED_SHORT, (void*)0);
+		
+		glDisableVertexAttribArray(0);
+		glDisableVertexAttribArray(1);
+		glDisableVertexAttribArray(2);
+		
+		
+		glEnable(GL_BLEND);
+		glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
 		
         //************ Draw m_object
-        
+		
         // Use our shader
         glUseProgram(program_obj.programID);
         
@@ -390,6 +438,9 @@ int Render::run() {
 		glActiveTexture(GL_TEXTURE2);
 		glBindTexture(GL_TEXTURE_CUBE_MAP, texture_skybox.textureID);
 		glUniform1i(program_obj.uniformID_CubeMap, 2);
+		glActiveTexture(GL_TEXTURE3);
+		glBindTexture(GL_TEXTURE_2D, texture_table.textureID);
+		glUniform1i(program_obj.uniformID_Table, 3);
 		
 		
         // attribute buffer
@@ -412,46 +463,14 @@ int Render::run() {
         glDisableVertexAttribArray(2);
 		
 		
-		
-        //************* Draw m_table
-        
-        // Use our shader
-        glUseProgram(program_std.programID);
-        
-        glUniformMatrix4fv(program_std.uniformID_View, 1, GL_FALSE, &controller.View[0][0]);
-        glUniformMatrix4fv(program_std.uniformID_Model, 1, GL_FALSE, &controller.Model_table[0][0]);
-        glUniformMatrix4fv(program_std.uniformID_MVP, 1, GL_FALSE, &controller.MVP_table[0][0]);
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, texture_photon.textureID);
-        glUniform1i(program_std.uniformID_Texture, 0);
-		 
-		glUniform3f(program_std.uniformID_Light, controller.lightPos.x, controller.lightPos.y, controller.lightPos.z);
-		 
-        // attribute buffer
-        glEnableVertexAttribArray(0);
-        glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer_table);
-        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
-        glEnableVertexAttribArray(1);
-        glBindBuffer(GL_ARRAY_BUFFER, uvbuffer_table);
-        glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, (void*)0);
-        glEnableVertexAttribArray(2);
-        glBindBuffer(GL_ARRAY_BUFFER, normalbuffer_table);
-        glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
-        // Index buffer
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, elementbuffer_table);
-        
-        glDrawElements(GL_TRIANGLES, m_table.indices.size(), GL_UNSIGNED_SHORT, (void*)0);
-        
-        glDisableVertexAttribArray(0);
-        glDisableVertexAttribArray(1);
-        glDisableVertexAttribArray(2);
+		glDisable(GL_BLEND);
 		
 		
 		//************** draw text
 		
         char text[256];
-        sprintf(text,"fps: %.2f, time: %.2f s", controller.fps, glfwGetTime());
-        text2d.print(text, 10, 560, 20);
+        sprintf(text,"fps: %.2f, frameTime: %.2fs, time: %.2f s", controller.fps, glfwGetTime()-frameStart, glfwGetTime());
+        text2d.print(text, 10, 560, 16);
 
 		
         // Swap buffers
