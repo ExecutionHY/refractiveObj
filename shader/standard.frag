@@ -22,7 +22,7 @@ void main(){
     // Light emission properties
     // You probably want to put them as uniforms
     vec3 LightColor = vec3(1,1,1);
-    float LightPower = 100.0f;
+    float LightPower = 50.0f;
     
     // Material properties
     vec3 MaterialDiffuseColor = texture(myTextureSampler, UV).rgb;
@@ -57,7 +57,7 @@ void main(){
 	vec3 rad = texture(radiance, (Position_worldspace.xz+vec2(1,1))*0.5).rgb;
 	//if (voxel == 128) rad = vec3(1,0,0);
 	
-	//rad = vec3(1, 1, 1);
+	//if (rad.b == 0.0f) rad = vec3(1,0,0);
 	
     vec3 c =
     // Ambient : simulates indirect lighting

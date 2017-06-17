@@ -39,7 +39,7 @@ __kernel void photonmarch(__read_only image2d_t map,
 	if (pos_inmap.w > EPSILON) {
 		
 		// pos_worldspace = lightspace * reverse(light_mvp) * M
-		float3 pos = pos_inmap.xyz * 10.0f - float3(2,2,2), npos;
+		float3 pos = pos_inmap.xyz * 10.0f - float3(2,2,2);
 		
 		float3 dir = normalize(pos-light_pos);
 		float stepsize = 2.0f / voxel_cnt;
@@ -48,17 +48,17 @@ __kernel void photonmarch(__read_only image2d_t map,
 		int x = pos.x * (voxel_cnt/2.0) + (voxel_cnt/2.0);
 		int y = pos.y * (voxel_cnt/2.0) + (voxel_cnt/2.0);
 		int z = pos.z * (voxel_cnt/2.0) + (voxel_cnt/2.0);
-		int index = x*voxel_cnt*voxel_cnt + y*voxel_cnt + z, lastindex = index;
+		int index = x*voxel_cnt*voxel_cnt + y*voxel_cnt + z;
 		float n = gradN[index].w + 1.0f;
 		float3 v = n * dir;
 		
 		
 		//float3 sv[25], sg[25];
-		int pass = 0, end = 0;
+		__private int pass = 0, end = 0, out = 1;
 
 		//rx[index] = 1.0f;
 		
-		float rad = 0.02;
+		float rad = 0.5;
 		
 		
 		for (int ii = 0; ii < voxel_cnt*1.2; ii++) {
@@ -71,34 +71,58 @@ __kernel void photonmarch(__read_only image2d_t map,
 			
 			if (n < 1 + EPSILON) {
 				if (pass == 1) {
-					AtomicAdd(&rx[index], rad*0.002);// TODO: int faster?
-					AtomicAdd(&ry[index], rad*0.002);
-					AtomicAdd(&rz[index], rad*0.002);
-					rad *= 0.998;
+					rx[index] = 0.05;
+					ry[index] = 0.05;
+					rz[index] = 0.05;
+					//AtomicAdd(&rx[index], rad*0.001);// TODO: int faster?
+					//AtomicAdd(&ry[index], rad*0.001);
+					//AtomicAdd(&rz[index], rad*0.001);
+					//rad *= 0.99f;
+					if (y < 2) {
+						rx[index] = 1.0f;
+						ry[index] = 1.0f;
+						rz[index] = 1.0f;
+					}
 				}
+				out = 1;
 			}
-			else if (n > 1.05){
-				pass = 1;
+			else if (n > 1.03) {
+				if (pos.x < 0) pass = 1;
+				out = 0;
 			}
 			
-			if (pass == 1) pos += stepsize / n * v;
-			else
-				pos += stepsize*(octree[index]/2+1) / n * v;
+			//if (pass == 1)
+			//else pos += stepsize*(octree[index]/2+1) / n * v;
 			
+			pos += stepsize / n * v;
+			v += gradN[index].xyz;
 			x = pos.x * (voxel_cnt/2.0) + (voxel_cnt/2.0);
 			y = pos.y * (voxel_cnt/2.0) + (voxel_cnt/2.0);
 			z = pos.z * (voxel_cnt/2.0) + (voxel_cnt/2.0);
 			index = x*voxel_cnt*voxel_cnt + y*voxel_cnt + z;
-			
-			if (pass == 1) v += gradN[index].xyz;
-			else
-				if (index != lastindex) v += gradN[index].xyz*(octree[index]/2+1);
-			// else no change to v
-			
 			n = gradN[index].w + 1.0f;
 			
-			//sv[ii] = v;
-			//sg[ii] = gradN[index].xyz;
+			//if (pass == 1) v += gradN[index].xyz;
+			//else v += gradN[index].xyz*(octree[index]/2+1);
+			
+			
+
+			if (pass == 1 && out == 1) {
+				if (length(v.xz) > 0.3) {
+					pass = -1;
+					break;
+				}
+				float3 odir = pos-(float3)(-0.3f, pos.y, 0.0f);
+				float dist = length(odir);
+				if (dist < 0.03) continue;
+				float alpha = stepsize*length(v.xz)/dist*(1-3*dist);
+				v = (1.0f-alpha)*v + (alpha)*float3(0.0f, -1.0f, 0.0f);
+				
+			}
+			
+			
+			//if (i == 686346) rx[index] = 1.0f;
+			
 		}
 		if (pass == 0) {
 			pos = pos_inmap.xyz * 10.0f - float3(2,2,2);
@@ -119,31 +143,26 @@ __kernel void photonmarch(__read_only image2d_t map,
 				AtomicAdd(&rz[index], rad);
 			}
 		}
-		else {
-			/*
+		else if (pass == 1){
+			
 			x = pos.x * (voxel_cnt/2.0) + (voxel_cnt/2.0);
-			y = 0;
+			y = pos.y * (voxel_cnt/2.0) + (voxel_cnt/2.0);
 			z = pos.z * (voxel_cnt/2.0) + (voxel_cnt/2.0);
-			if (x >= voxel_cnt) x = voxel_cnt-1;
-			if (x < 0) x = 0;
-			if (z >= voxel_cnt) z = voxel_cnt-1;
-			if (z < 0) z = 0;
+			
+			y = 0;
+			//if (y > 0) return;
+			  
+			//if (x >= voxel_cnt) x = voxel_cnt-1;
+			//if (x < 0) x = 0;
+			//if (z >= voxel_cnt) z = voxel_cnt-1;
+			//if (z < 0) z = 0;
 			index = x*voxel_cnt*voxel_cnt + y*voxel_cnt + z;
 			
-			AtomicAdd(&rx[index], rad);// TODO: int faster?
-			AtomicAdd(&ry[index], rad);
-			AtomicAdd(&rz[index], rad);
-			 */
+			//AtomicAdd(&rx[index], rad);// TODO: int faster?
+			//AtomicAdd(&ry[index], rad);
+			//AtomicAdd(&rz[index], rad);
+			
 		}
-		//else ry[index] = 1.0f;
-		
-		/*
-		if (i == 3120) {
-			for (int j = 0; j < 25; j++) {
-				printf("%d: + (%f, %f, %f) = (%f, %f, %f)\n", j, sg[j].x, sg[j].y, sg[j].z, sv[j].x, sv[j].y, sv[j].z);
-			}
-		}
-		 */
 	}
 }
 
@@ -164,15 +183,22 @@ __kernel void tableradiance(__global float* rx,
 	int py = 0;
 	int index = px*voxel_cnt*voxel_cnt + py*voxel_cnt + pz;
 	
-	float4 sum;
+	float4 sum = (float4)(0.0f, 0.0f, 0.0f, 0.0f);
 	for(int a = -maskSize; a < maskSize+1; a++) {
 		for(int b = -maskSize; b < maskSize+1; b++) {
 			int idx = index+a*voxel_cnt*voxel_cnt+b;
 			sum += mask[(a+maskSize)*(maskSize*2+1)+(b+maskSize)] * (float4)(rx[idx], ry[idx], rz[idx], 0.0f);
+			//if (i == 704576) printf("(%f, %f, %f)\n", rx[idx], ry[idx], rz[idx]);
 		}
 	}
 	
 	table[i] = sum;
+	if (table[i].x > 1.0f) table[i].x = 1.0f;
+	if (table[i].y > 1.0f) table[i].y = 1.0f;
+	if (table[i].z > 1.0f) table[i].z = 1.0f;
+	
+	//if (ry[i] > 0.5 && rx[i] < 0.3 && rz[i] < 0.3) printf("%d %d %d (%f, %f, %f) (%f, %f, %f)\n", i, px, pz, rx[i], ry[i], rz[i], table[i].x, table[i].y, table[i].z);
+	//if (px == 86 && pz == 7) printf("(%f, %f, %f) ", table[i].x, table[i].y, table[i].z);
 	
 }
 
@@ -222,7 +248,12 @@ __kernel void radianceblur(__global float* rx,
 		}
 		 */
 		if (y > 0) radiance[i] = (float4)(rx[i], ry[i], rz[i], 0.0f);
+		else radiance[i] = (float4)(0.0f, 0.0f, 0.0f, 0.0f);
 	}
-		
+	
+	if (radiance[i].x > 1.0f) radiance[i].x = 1.0f;
+	if (radiance[i].y > 1.0f) radiance[i].y = 1.0f;
+	if (radiance[i].z > 1.0f) radiance[i].z = 1.0f;
+	 
 }
 

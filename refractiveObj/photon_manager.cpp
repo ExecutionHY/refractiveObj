@@ -157,9 +157,9 @@ int PhotonManager::march(GLuint textureID_photonmap) {
 	table_buff = clCreateBuffer(context, CL_MEM_WRITE_ONLY,
 								   sizeof(vec4)*MAP_WIDTH*MAP_WIDTH, NULL, NULL);
 	
-	float* mask = createBlurMask3D(2.0f, &maskSize);
+	float* mask = createBlurMask3D(1.0f, &maskSize);
 	mask_buff = clCreateBuffer(context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, sizeof(float)*(2*maskSize+1)*(2*maskSize+1)*(2*maskSize+1), mask, NULL);
-	float* mask2 = createBlurMask2D(2.0f, &maskSize2);
+	float* mask2 = createBlurMask2D(3.0f, &maskSize2);
 	mask_buff2 = clCreateBuffer(context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, sizeof(float)*(2*maskSize2+1)*(2*maskSize2+1), mask2, NULL);
 	
 	
@@ -282,7 +282,12 @@ int PhotonManager::march(GLuint textureID_photonmap) {
 		perror("Couldn't enqueue the read buffer command");
 		exit(1);
 	}
+	/*
+	for (int i = 0; i < MAP_WIDTH; i++)
+	for (int j = 0; j < MAP_HEIGHT; j++)
+	printf("tb- %4d %4d, (%f, %f, %f)\n", i, j, table[i*MAP_WIDTH+j].x, table[i*MAP_WIDTH+j].y, table[i*MAP_WIDTH+j].z);
 	
+	*/
 	
 	//************* blur
 	

@@ -15,7 +15,7 @@ int FRAME_WIDTH = 800;
 int FRAME_HEIGHT = 600;
 int MAP_WIDTH = 1024;
 int MAP_HEIGHT = 1024;
-float refConst = 1.15f;
+float refConst = 1.25f;
 
 vec4 grad_n[VOXEL_CNT*VOXEL_CNT*VOXEL_CNT];
 vec4 radiance[VOXEL_CNT*VOXEL_CNT*VOXEL_CNT];
