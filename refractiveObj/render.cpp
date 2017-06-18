@@ -309,10 +309,12 @@ int Render::run() {
 	texture_skybox.loadCubeMap("river");
 	texture_table.loadBMP("marble.bmp");
 	
+	vec3 pos1 = vec3(-0.2, 0.3, 0);
+	
 	// voxelization
 	float t1 = glfwGetTime();
 	//vec3 pos =
-	voxelizer.work(m_object.indexed_vertices, m_object.indices);
+	voxelizer.work(m_object.indexed_vertices, m_object.indices, pos1);
 	//voxelizer.print();
 	printf("Voxelization time = %6f s\n", glfwGetTime()-t1);
 	
@@ -331,7 +333,7 @@ int Render::run() {
 	
 	// photon marching
 	t1 = glfwGetTime();
-	photonManager.march(texture_photon.textureID);
+	photonManager.march(texture_photon.textureID, pos1);
 	printf("Photon marching time = %6f s\n", glfwGetTime()-t1);
 	
 	texture_gradN.load3D(grad_n);

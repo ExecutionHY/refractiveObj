@@ -46,9 +46,9 @@ void main(){
 	vec3 gradn;
 	float gradnx, gradny, gradnz;
 	
-	bool isObj = false;
+	bool isObj = false, isReflection = false;
 	
-    for (int i = 0; i < voxel_cnt; i++) {
+    for (int i = 0; i < voxel_cnt*2; i++) {
 		// only focus on a cube
 		if (abs(pos.x) >= 1-EPSILON || abs(pos.y) >= 1-EPSILON || abs(pos.z) >= 1-EPSILON) // TODO: too much operation
 			break;
@@ -62,15 +62,25 @@ void main(){
 		v += texture(grad_n, uv).rgb;
 
 		// sum up radiance
-		radiance += texture(radianceDistribution, uv).rgb;
+		if (isReflection) radiance += texture(radianceDistribution, uv).rgb*0.2;
+		else radiance += texture(radianceDistribution, uv).rgb;
 		
+		if (pos.y <= -1+stepSize) {
+			isReflection = true;
+			v.y = -v.y;
+			pos += stepSize / n * v;
+		}
 	}
 	
 	if (isObj) {
-		color = vec4(radiance + texture(CubeMap, bgpos(pos, normalize(v))).rgb, 1.0f);
+		if (isReflection) color = vec4(radiance + 0.2*texture(CubeMap, bgpos(pos, normalize(v))).rgb, 0.0f);
+		else  color = vec4(radiance + texture(CubeMap, bgpos(pos, normalize(v))).rgb, 1.0f);
+		
 	}
 	else {
-		if (length(radiance) > 0.01) color = vec4(radiance, 0);
+		if (length(radiance) > 0.01) {
+			color = vec4(radiance, 0);
+		}
 		else color = vec4(0,0,0,0);
 	}
 	

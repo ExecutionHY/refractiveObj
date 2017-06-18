@@ -15,12 +15,13 @@ class Voxelizer {
 private:
 	int voxelize_CL(
 		vector<vec3> & indexed_vertices,
-		vector<unsigned short> & indices);
+		vector<unsigned short> & indices, vec3 pos1);
 public:
 	Voxelizer();
 	~Voxelizer();
 	bool work(vector<vec3> & indexed_vertices,
-			  vector<unsigned short> & indices);
+			  vector<unsigned short> & indices,
+			  vec3 pos1);
 	void print();
 };
 

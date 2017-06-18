@@ -22,7 +22,7 @@ PhotonManager::~PhotonManager() {}
 #define KERNEL_FUNC3 "radianceblur"
 
 
-int PhotonManager::march(GLuint textureID_photonmap) {
+int PhotonManager::march(GLuint textureID_photonmap, vec3 pos1) {
 	
 	/* Host/device data structures */
 	cl_platform_id platform;
@@ -143,7 +143,7 @@ int PhotonManager::march(GLuint textureID_photonmap) {
 		exit(1);
 	}
 	
-	lightPos = vec3(0,10,0);
+	lightPos = vec3(0.5,7,0);
 	rx_buff = clCreateBuffer(context, CL_MEM_READ_WRITE,
 							 sizeof(cl_float)*VOXEL_CNT*VOXEL_CNT*VOXEL_CNT, NULL, NULL);
 	ry_buff = clCreateBuffer(context, CL_MEM_READ_WRITE,
@@ -188,6 +188,7 @@ int PhotonManager::march(GLuint textureID_photonmap) {
 	clSetKernelArg(kernel, 7, sizeof(cl_mem), &ry_buff);
 	clSetKernelArg(kernel, 8, sizeof(cl_mem), &rz_buff);
 	clSetKernelArg(kernel, 9, sizeof(cl_mem), &octree_buff);
+	clSetKernelArg(kernel, 10, sizeof(cl_float3), &pos1);
 	
 	
 	glFinish();

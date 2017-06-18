@@ -28,7 +28,9 @@ __kernel void photonmarch(__read_only image2d_t map,
 						  __global float* rx,
 						  __global float* ry,
 						  __global float* rz,
-						  __global int* octree) {
+						  __global int* octree,
+						  float3 pos1
+						  ) {
 	
 	
 	int i = get_global_id(0);
@@ -40,8 +42,10 @@ __kernel void photonmarch(__read_only image2d_t map,
 		
 		// pos_worldspace = lightspace * reverse(light_mvp) * M
 		float3 pos = pos_inmap.xyz * 10.0f - float3(2,2,2);
+		//float3 pos1 = (float3)(-0.3f, 0.3, 0.0f);
+		float3 stddir = (normalize)(pos1-light_pos);
 		
-		float3 dir = normalize(pos-light_pos);
+		float3 dir = (normalize)(pos-light_pos);
 		float stepsize = 2.0f / voxel_cnt;
 		
 		pos += dir*stepsize*3;
@@ -70,10 +74,16 @@ __kernel void photonmarch(__read_only image2d_t map,
 			}
 			
 			if (n < 1 + EPSILON) {
+				/*if (pass == 0) {
+					rx[index] = 0.01f;
+					ry[index] = 0.01f;
+					rz[index] = 0.01f;
+				}
+				else*/
 				if (pass == 1) {
-					rx[index] = 0.05;
-					ry[index] = 0.05;
-					rz[index] = 0.05;
+					rx[index] = 0.05f;
+					ry[index] = 0.05f;
+					rz[index] = 0.05f;
 					//AtomicAdd(&rx[index], rad*0.001);// TODO: int faster?
 					//AtomicAdd(&ry[index], rad*0.001);
 					//AtomicAdd(&rz[index], rad*0.001);
@@ -84,38 +94,67 @@ __kernel void photonmarch(__read_only image2d_t map,
 						rz[index] = 1.0f;
 					}
 				}
+				else if (pass == 2) {
+					rx[index] = 0.06f;
+					ry[index] = 0.02f;
+					rz[index] = 0.02f;
+					
+					if (y < 2) {
+						rx[index] = 1.0f;
+						ry[index] = 0.4f;
+						rz[index] = 0.4f;
+					}
+				}
 				out = 1;
 			}
 			else if (n > 1.03) {
 				if (pos.x < 0) pass = 1;
+				else {
+					pass = 2;
+
+				}
 				out = 0;
 			}
 			
-			//if (pass == 1)
+			//if (pass > 0)
+				pos += stepsize / n * v;
 			//else pos += stepsize*(octree[index]/2+1) / n * v;
+			//if (pass > 0)
+				v += gradN[index].xyz;
+			//else v += gradN[index].xyz*(octree[index]/2+1);
 			
-			pos += stepsize / n * v;
-			v += gradN[index].xyz;
 			x = pos.x * (voxel_cnt/2.0) + (voxel_cnt/2.0);
 			y = pos.y * (voxel_cnt/2.0) + (voxel_cnt/2.0);
 			z = pos.z * (voxel_cnt/2.0) + (voxel_cnt/2.0);
 			index = x*voxel_cnt*voxel_cnt + y*voxel_cnt + z;
 			n = gradN[index].w + 1.0f;
 			
-			//if (pass == 1) v += gradN[index].xyz;
-			//else v += gradN[index].xyz*(octree[index]/2+1);
 			
 			
 
 			if (pass == 1 && out == 1) {
-				if (length(v.xz) > 0.3) {
+				if (dot(v, stddir) < 0.9) {
 					pass = -1;
 					break;
 				}
-				float3 odir = pos-(float3)(-0.3f, pos.y, 0.0f);
+				float3 odir = v - stddir*dot(v, stddir);
+				float len = length(odir);
+				float3 npos1 = pos1 + stddir*(pos.y-pos1.y)/stddir.y;
+				float dist = distance(pos, npos1);
+				if (dist < 0.01) continue;
+				float alpha = stepsize*len/dist*(1-5*dist);
+				v = (1.0f-alpha)*v + (alpha)*stddir;
+				
+			}
+			else if (pass == 2 && out == 1) {
+				if (length(v.xz) > 0.5) {
+					pass = -1;
+					break;
+				}
+				float3 odir = pos-(float3)(0.5f, pos.y, 0.0f);
 				float dist = length(odir);
-				if (dist < 0.03) continue;
-				float alpha = stepsize*length(v.xz)/dist*(1-3*dist);
+				if (dist < 0.01) continue;
+				float alpha = stepsize*length(v.xz)/dist*(1-2*dist);
 				v = (1.0f-alpha)*v + (alpha)*float3(0.0f, -1.0f, 0.0f);
 				
 			}
@@ -193,6 +232,20 @@ __kernel void tableradiance(__global float* rx,
 	}
 	
 	table[i] = sum;
+	if (length(sum) < 0.1f) {
+		index += voxel_cnt;
+		float4 sum = (float4)(0.0f, 0.0f, 0.0f, 0.0f);
+		for(int a = -maskSize; a < maskSize+1; a++) {
+			for(int b = -maskSize; b < maskSize+1; b++) {
+				int idx = index+a*voxel_cnt*voxel_cnt+b;
+				sum += mask[(a+maskSize)*(maskSize*2+1)+(b+maskSize)] * (float4)(rx[idx], ry[idx], rz[idx], 0.0f);
+				//if (i == 704576) printf("(%f, %f, %f)\n", rx[idx], ry[idx], rz[idx]);
+			}
+		}
+		table[i] = sum;
+	}
+	
+	
 	if (table[i].x > 1.0f) table[i].x = 1.0f;
 	if (table[i].y > 1.0f) table[i].y = 1.0f;
 	if (table[i].z > 1.0f) table[i].z = 1.0f;
@@ -235,8 +288,10 @@ __kernel void radianceblur(__global float* rx,
 		radiance[i] = sum;
 	}
 	else {
+		
+		if (y > 0) radiance[i] = (float4)(rx[i], ry[i], rz[i], 0.0f);
 		/*
-		if (y == 0) {
+		else if (y == 1) {
 			float4 sum;
 			for(int a = -maskSize2; a < maskSize2+1; a++) {
 				for(int b = -maskSize2; b < maskSize2+1; b++) {
@@ -244,10 +299,8 @@ __kernel void radianceblur(__global float* rx,
 					sum += mask2[(a+maskSize2)*(maskSize2*2+1)+(b+maskSize2)] * (float4)(rx[index], ry[index], rz[index], 0.0f);
 				}
 			}
-			radiance[i] = sum*10;
-		}
-		 */
-		if (y > 0) radiance[i] = (float4)(rx[i], ry[i], rz[i], 0.0f);
+			radiance[i] = sum;
+		}*/
 		else radiance[i] = (float4)(0.0f, 0.0f, 0.0f, 0.0f);
 	}
 	

@@ -18,7 +18,7 @@ public:
 	PhotonManager();
 	~PhotonManager();
 	
-	int march(GLuint textureID_photonmap);
+	int march(GLuint textureID_photonmap, vec3 pos1);
 
 };
 

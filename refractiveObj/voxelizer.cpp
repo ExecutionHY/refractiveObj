@@ -12,10 +12,11 @@ Voxelizer::Voxelizer() {}
 Voxelizer::~Voxelizer() {}
 
 bool Voxelizer::work(vector<vec3> & indexed_vertices,
-					 vector<unsigned short> & indices) {
+					 vector<unsigned short> & indices,
+					 vec3 pos1) {
 	printf("Voxelizing mesh...\n");
 	
-	voxelize_CL(indexed_vertices, indices);
+	voxelize_CL(indexed_vertices, indices, pos1);
 	
 	/*
 	for (int i = 0; i < VOXEL_CNT; i++)
@@ -44,7 +45,7 @@ void Voxelizer::print() {
 
 
 int Voxelizer::voxelize_CL(vector<vec3> & indexed_vertices,
-						   vector<unsigned short> & indices) {
+						   vector<unsigned short> & indices, vec3 pos1) {
 	
 	/* Host/device data structures */
 	cl_platform_id platform;
@@ -179,6 +180,7 @@ int Voxelizer::voxelize_CL(vector<vec3> & indexed_vertices,
 	clSetKernelArg(kernel, 3, sizeof(cl_int), &index_cnt);
 	clSetKernelArg(kernel, 4, sizeof(cl_int), &voxel_cnt);
 	clSetKernelArg(kernel, 5, sizeof(cl_float), &refConst);
+	clSetKernelArg(kernel, 6, sizeof(cl_float2), &pos1);
 	
 	/* Enqueue the command queue to the device */
 	work_units_per_kernel = voxel_3;

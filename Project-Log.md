@@ -364,6 +364,13 @@ Jun 17
 
 ## 2.5 Reflection
 
+Jun 18
 
+反射的代码很简单，在渲染这个 bounding cube 的时候触底光线反弹即可。把第二个球的焦散也做也了一下，桌子的部分想了想还是需要一个 kernel ，否则很难达到效果，毕竟 voxel 数量还是比较少的。
+
+![2-5](./project-log-img/2-5.png)
+
+整个流水线跑的时间大约还是有 1.5s ，奇怪的是就算降低 voxel 采样数，voxelization 也不会变快，而增大一倍就变慢，很难受。
 
 ## 2.6 Adaptive Marching
+

@@ -78,7 +78,9 @@ __kernel void voxelize(__global ushort* indices,
 					   __global float* refIndex,
 					   int index_cnt,
 					   int voxel_cnt,
-					   float refConst) {
+					   float refConst,
+					   float3 pos1
+					   ) {
 	
 	
 	int i = get_global_id(0);
@@ -97,8 +99,8 @@ __kernel void voxelize(__global ushort* indices,
 	if (intersectCnt % 2 == 1) refIndex[i] = refConst;
 	else refIndex[i] = 1.0f;
 	*/
-	float3 pos1 = (float3)(-0.3, 0.3, 0);
-	float3 pos2 = (float3)(0.5, -0.6, 0);
+	//float3 pos1 = (float3)(-0.3, 0.3, 0);
+	float3 pos2 = (float3)(0.5, -0.3, 0);
 	
 	if (distance(pos, pos1) < 0.4f || distance(pos, pos2) < 0.2f) refIndex[i] = refConst;
 	else refIndex[i] = 1.0f;
